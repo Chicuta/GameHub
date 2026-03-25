@@ -118,6 +118,3 @@ Dark theme com acentos neon:
 
 ---
 
-## 🌐 Deploy
-
-O projeto usa **Vercel** com rewrite SPA (`vercel.json`). Veja [DEPLOY.md](DEPLOY.md) para instruções completas (deploy estático ou com Supabase).
