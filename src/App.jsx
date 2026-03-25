@@ -25,16 +25,25 @@ import SagasTracker from './components/SagasTracker'
 import GenreDistribution from './components/GenreDistribution'
 import BacklogHealth from './components/BacklogHealth'
 import AuthPage from './pages/AuthPage'
-import { Gamepad2, User } from 'lucide-react'
+import CatalogPage from './pages/CatalogPage'
+import { Gamepad2, User, BookOpen } from 'lucide-react'
 
 /* ── Navbar ─────────────────────────────────────── */
 function Navbar() {
   const { user, profile, signOut } = useAuth()
   return (
     <nav className="max-w-5xl mx-auto flex items-center justify-between py-3 px-1 mb-2">
-      <Link to="/" className="font-heading font-black text-accent-cyan tracking-wider text-lg flex items-center gap-1.5">
-        <Gamepad2 size={20} strokeWidth={2.5} /> CENTRAL GAMER
-      </Link>
+      <div className="flex items-center gap-4">
+        <Link to="/" className="font-heading font-black text-accent-cyan tracking-wider text-lg flex items-center gap-1.5">
+          <Gamepad2 size={20} strokeWidth={2.5} /> CENTRAL GAMER
+        </Link>
+        <Link
+          to="/catalogo"
+          className="flex items-center gap-1 text-sm text-dash-muted hover:text-accent-cyan transition-colors font-bold uppercase tracking-wider"
+        >
+          <BookOpen size={16} strokeWidth={2.5} /> Catálogo
+        </Link>
+      </div>
       <div className="flex items-center gap-3">
         {user ? (
           <>
@@ -118,6 +127,7 @@ export default function App() {
               <Navbar />
               <Routes>
                 <Route path="/" element={<LandingHero />} />
+                <Route path="/catalogo" element={<CatalogPage />} />
                 <Route path="/perfil" element={<Perfil />} />
                 <Route path="/auth" element={<AuthRoute />} />
               </Routes>

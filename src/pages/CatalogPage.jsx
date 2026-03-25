@@ -1,0 +1,391 @@
+import { useState, useEffect, useMemo } from 'react'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
+import { useUserGames } from '../contexts/UserGamesContext'
+import { Search, SlidersHorizontal, BookOpen, Gamepad2, Star, X } from 'lucide-react'
+import toast from 'react-hot-toast'
+import SectionTitle from '../components/SectionTitle'
+
+const STATUS_OPTIONS = [
+  { value: 'jogando', label: '▶ Jogando' },
+  { value: 'zerado', label: '✓ Zerado' },
+  { value: 'jogado', label: '🏆 Jogado' },
+  { value: 'pausado', label: '⏸ Pausado' },
+  { value: 'backlog', label: '■ Backlog' },
+  { value: 'abandonado', label: '☠ Abandonado' },
+]
+
+const PLATFORM_LIST = [
+  'PC', 'Steam Deck',
+  'PS5', 'PS4', 'PS3', 'PS2', 'PS1',
+  'Xbox Series X/S', 'Xbox One', 'Xbox 360',
+  'Switch', 'Wii U', 'Wii', '3DS', 'DS', 'N64',
+  'SNES', 'NES', 'Game Boy', 'Game Boy Advance',
+  'Sega Saturn', 'Mega Drive', 'Dreamcast', 'Game Gear', 'Master System', 'Sega CD',
+  'Neo Geo', 'Arcade',
+  'PC Engine', 'PSP',
+  'Mobile', 'Outro',
+]
+
+const inputCls = 'w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-cyan transition-colors'
+const labelCls = 'block text-xs font-bold uppercase tracking-wider text-dash-muted mb-1'
+
+export default function CatalogPage() {
+  const [allGames, setAllGames] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [genreFilter, setGenreFilter] = useState('')
+  const [showFilters, setShowFilters] = useState(false)
+  const [selectedGame, setSelectedGame] = useState(null)
+
+  // Fetch all games from DB
+  useEffect(() => {
+    async function fetchAll() {
+      if (!supabase) return
+      setLoading(true)
+      const { data, error } = await supabase
+        .from('games')
+        .select('id, nome, capa, generos, plataformas, metacritic, rawg_rating, igdb_rating, data_lancamento, descricao, hltb_main')
+        .not('capa', 'is', null)
+        .order('nome')
+      if (error) {
+        console.error('fetchCatalog:', error)
+        setAllGames([])
+      } else {
+        setAllGames(data || [])
+      }
+      setLoading(false)
+    }
+    fetchAll()
+  }, [])
+
+  // Extract unique genres
+  const allGenres = useMemo(() => {
+    const set = new Set()
+    allGames.forEach(g => g.generos?.forEach(genre => set.add(genre)))
+    return [...set].sort()
+  }, [allGames])
+
+  // Filter games
+  const filtered = useMemo(() => {
+    let list = allGames
+
+    if (search) {
+      const q = search.toLowerCase()
+      list = list.filter(g => g.nome.toLowerCase().includes(q))
+    }
+
+    if (genreFilter) {
+      list = list.filter(g => g.generos?.includes(genreFilter))
+    }
+
+    return list
+  }, [allGames, search, genreFilter])
+
+  // Group by genre
+  const groupedByGenre = useMemo(() => {
+    if (genreFilter) {
+      return [{ genre: genreFilter, games: filtered }]
+    }
+
+    const map = new Map()
+    filtered.forEach(game => {
+      const genres = game.generos?.length > 0 ? game.generos : ['Sem Gênero']
+      genres.forEach(genre => {
+        if (!map.has(genre)) map.set(genre, [])
+        map.get(genre).push(game)
+      })
+    })
+
+    return [...map.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([genre, games]) => ({ genre, games }))
+  }, [filtered, genreFilter])
+
+  const selectCls = 'bg-black/40 border border-white/10 rounded-lg px-2.5 py-1.5 text-white text-xs font-bold focus:outline-none focus:border-accent-cyan transition-colors appearance-none cursor-pointer'
+
+  return (
+    <div className="max-w-5xl mx-auto">
+      <div className="bg-dash-bg/80 backdrop-blur-xl rounded-2xl border border-dash-border p-5">
+        <SectionTitle icon={<BookOpen size={22} strokeWidth={2.5} className="text-accent-cyan" />}>
+          CATÁLOGO ({allGames.length})
+        </SectionTitle>
+
+        {/* Toolbar */}
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-dash-muted" strokeWidth={2.5} />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Buscar no catálogo..."
+              className="w-full bg-black/40 border border-white/10 rounded-lg pl-8 pr-3 py-1.5 text-white text-sm focus:outline-none focus:border-accent-cyan transition-colors"
+            />
+          </div>
+
+          <button
+            onClick={() => setShowFilters(f => !f)}
+            className={`flex items-center gap-1 text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg border transition-colors cursor-pointer ${
+              showFilters || genreFilter
+                ? 'bg-accent-cyan/15 text-accent-cyan border-accent-cyan/30'
+                : 'text-dash-muted border-white/10 hover:text-white'
+            }`}
+          >
+            <SlidersHorizontal size={14} strokeWidth={2.5} />
+            Filtros
+            {genreFilter && (
+              <span className="bg-accent-cyan text-dash-bg text-[0.6em] font-black rounded-full w-4 h-4 flex items-center justify-center">1</span>
+            )}
+          </button>
+        </div>
+
+        {/* Filter row */}
+        {showFilters && (
+          <div className="flex flex-wrap gap-2 mb-4 p-3 bg-black/20 rounded-xl border border-white/5">
+            <div>
+              <label className="block text-[0.6em] font-bold uppercase text-dash-muted mb-1">Gênero</label>
+              <select value={genreFilter} onChange={e => setGenreFilter(e.target.value)} className={selectCls}>
+                <option value="">Todos</option>
+                {allGenres.map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
+            </div>
+            {genreFilter && (
+              <button
+                onClick={() => setGenreFilter('')}
+                className="self-end text-accent-cyan text-xs hover:underline cursor-pointer mb-1"
+              >
+                Limpar filtro
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Content */}
+        {loading ? (
+          <div className="flex items-center justify-center py-24">
+            <div className="w-8 h-8 border-2 border-accent-cyan/30 border-t-accent-cyan rounded-full animate-spin" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-16 text-dash-muted">
+            <BookOpen size={40} className="mx-auto mb-3 opacity-40" />
+            <p className="text-sm">Nenhum jogo encontrado.</p>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {groupedByGenre.map(({ genre, games }) => (
+              <div key={genre}>
+                <h3 className="font-heading font-black text-white uppercase tracking-wider text-sm mb-3 flex items-center gap-2">
+                  <span className="text-accent-cyan">#</span> {genre}
+                  <span className="text-dash-muted text-xs font-normal">({games.length})</span>
+                </h3>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                  {games.map(game => (
+                    <CatalogCard key={`${genre}-${game.id}`} game={game} onClick={() => setSelectedGame(game)} />
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Modal */}
+      {selectedGame && (
+        <CatalogModal game={selectedGame} onClose={() => setSelectedGame(null)} />
+      )}
+    </div>
+  )
+}
+
+/* ── Card ─────────────────────────────────────────── */
+function CatalogCard({ game, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="bg-dash-surface rounded-lg border border-white/5 overflow-hidden flex flex-col h-[180px] sm:h-[220px] transition-all duration-300 hover:scale-[1.03] hover:border-accent-cyan hover:shadow-[0_0_12px_rgba(0,245,255,0.15)] cursor-pointer group text-left w-full"
+    >
+      <div className="relative flex-1 w-full bg-black flex items-center justify-center overflow-hidden">
+        {game.capa ? (
+          <img src={game.capa} alt={game.nome} className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+        ) : (
+          <Gamepad2 size={28} className="text-dash-muted" />
+        )}
+        {game.igdb_rating && (
+          <span className={`absolute top-1.5 right-1.5 text-[0.6em] font-black px-1.5 py-0.5 rounded ${
+            game.igdb_rating >= 75 ? 'bg-accent-success/90 text-white' :
+            game.igdb_rating >= 50 ? 'bg-accent-gold/90 text-dash-bg' :
+            'bg-accent-danger/90 text-white'
+          }`}>
+            {Math.round(game.igdb_rating)}
+          </span>
+        )}
+      </div>
+      <div className="px-2 py-1.5 bg-black/60 border-t border-white/5">
+        <div className="font-black text-[0.7em] text-white truncate">{game.nome}</div>
+        <div className="text-[0.55em] text-dash-muted truncate">{game.generos?.slice(0, 2).join(', ')}</div>
+      </div>
+    </button>
+  )
+}
+
+/* ── Modal ────────────────────────────────────────── */
+function CatalogModal({ game, onClose }) {
+  const { user } = useAuth()
+  const { reload } = useUserGames()
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState({
+    status: 'jogando', nota: '', tempo: '', anoJogado: '',
+    console: game.plataformas?.[0] || '',
+    hltb: game.hltb_main ? String(game.hltb_main) : '',
+  })
+  const [saving, setSaving] = useState(false)
+
+  async function handleAdd(e) {
+    e.preventDefault()
+    if (!supabase || !user) {
+      toast.error('Faça login para adicionar jogos')
+      return
+    }
+    setSaving(true)
+    try {
+      const today = new Date().toISOString().split('T')[0]
+      const year = new Date().getFullYear()
+      const isZerado = form.status === 'zerado' || form.status === 'jogado'
+      const dbStatus = form.status === 'jogado' ? 'zerado' : form.status
+      const { error } = await supabase.from('user_games').upsert({
+        user_id: user.id,
+        game_id: game.id,
+        status: dbStatus,
+        console: form.console || null,
+        nota: form.nota ? parseInt(form.nota) : null,
+        tempo: form.tempo ? parseFloat(form.tempo) : 0,
+        hltb: form.hltb ? parseFloat(form.hltb) : null,
+        data_inicio: (form.status === 'jogando' || form.status === 'pausado') ? today : null,
+        data_zerado: isZerado ? (form.status === 'jogado' && form.anoJogado ? `${form.anoJogado}-01-01` : today) : null,
+        ano_zerado: isZerado ? (form.status === 'jogado' && form.anoJogado ? parseInt(form.anoJogado) : year) : null,
+        ano_abandonado: form.status === 'abandonado' ? year : null,
+      }, { onConflict: 'user_id,game_id' })
+      if (error) throw error
+      toast.success(`${game.nome} adicionado!`)
+      reload?.()
+      onClose()
+    } catch (err) {
+      toast.error(err.message || 'Erro ao salvar')
+    } finally { setSaving(false) }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+      <div
+        className="relative bg-dash-surface border border-dash-border rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-5"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Close */}
+        <button onClick={onClose} className="absolute top-3 right-3 text-dash-muted hover:text-white cursor-pointer z-10">
+          <X size={20} />
+        </button>
+
+        {/* Game Info */}
+        <div className="flex gap-4 mb-4">
+          {game.capa ? (
+            <img src={game.capa} alt="" className="w-28 h-36 rounded-lg object-cover shrink-0" />
+          ) : (
+            <div className="w-28 h-36 rounded-lg bg-white/5 flex items-center justify-center text-3xl shrink-0 text-accent-cyan">
+              <Gamepad2 size={36} />
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <h3 className="text-white font-black text-lg leading-tight">{game.nome}</h3>
+            <div className="text-dash-muted text-xs mt-1.5">
+              {game.data_lancamento?.substring(0, 4)} • {game.generos?.join(', ')}
+            </div>
+            {game.igdb_rating && (
+              <div className="flex items-center gap-1 mt-1.5">
+                <Star size={14} className="text-accent-gold" strokeWidth={2.5} />
+                <span className={`text-sm font-bold ${
+                  game.igdb_rating >= 75 ? 'text-accent-success' :
+                  game.igdb_rating >= 50 ? 'text-accent-gold' :
+                  'text-accent-danger'
+                }`}>
+                  {Math.round(game.igdb_rating)}
+                </span>
+              </div>
+            )}
+            <div className="text-[0.65rem] text-dash-muted mt-1.5 line-clamp-2">{game.plataformas?.join(', ')}</div>
+            {game.descricao && (
+              <p className="text-dash-muted text-xs mt-2 line-clamp-3">{game.descricao}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Add to Hub button */}
+        {!showForm ? (
+          <button
+            onClick={() => {
+              if (!user) {
+                toast.error('Faça login para adicionar jogos ao seu hub')
+                return
+              }
+              setShowForm(true)
+            }}
+            className="w-full py-3 rounded-xl border-2 border-dashed border-accent-cyan/30 text-accent-cyan font-heading font-black uppercase tracking-wider text-sm hover:bg-accent-cyan/5 hover:border-accent-cyan/50 transition-all cursor-pointer"
+          >
+            + ADICIONAR AO MEU HUB
+          </button>
+        ) : (
+          <form onSubmit={handleAdd} className="border-t border-white/5 pt-4 mt-2">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+              <div>
+                <label className={labelCls}>Status</label>
+                <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className={inputCls}>
+                  {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className={labelCls}>Plataforma</label>
+                <select value={form.console} onChange={e => setForm(f => ({ ...f, console: e.target.value }))} className={inputCls}>
+                  <option value="">Selecione...</option>
+                  {game.plataformas?.length > 0
+                    ? game.plataformas.map(p => <option key={p} value={p}>{p}</option>)
+                    : PLATFORM_LIST.map(p => <option key={p} value={p}>{p}</option>)
+                  }
+                </select>
+              </div>
+              <div>
+                <label className={labelCls}>Nota (1-10)</label>
+                <input type="number" min="1" max="10" value={form.nota} onChange={e => setForm(f => ({ ...f, nota: e.target.value }))} placeholder="—" className={inputCls} />
+              </div>
+              <div>
+                <label className={labelCls}>Horas Jogadas</label>
+                <input type="number" min="0" step="0.5" value={form.tempo} onChange={e => setForm(f => ({ ...f, tempo: e.target.value }))} placeholder="0" className={inputCls} />
+              </div>
+              <div>
+                <label className={labelCls}>HLTB (horas)</label>
+                <input type="number" min="0" step="0.5" value={form.hltb} onChange={e => setForm(f => ({ ...f, hltb: e.target.value }))} placeholder="Estimado" className={inputCls} />
+              </div>
+              {form.status === 'jogado' && (
+                <div>
+                  <label className={labelCls}>Ano que jogou</label>
+                  <input type="number" min="1970" max={new Date().getFullYear()} value={form.anoJogado} onChange={e => setForm(f => ({ ...f, anoJogado: e.target.value }))} placeholder={String(new Date().getFullYear())} className={inputCls} />
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <button type="submit" disabled={saving}
+                className="flex-1 py-2.5 rounded-lg font-heading font-black uppercase tracking-wider text-sm bg-gradient-to-r from-accent-cyan to-accent-purple text-dash-bg hover:shadow-[0_0_20px_rgba(0,245,255,0.3)] transition-all disabled:opacity-50 cursor-pointer">
+                {saving ? 'Salvando...' : '+ Adicionar à Coleção'}
+              </button>
+              <button type="button" onClick={() => setShowForm(false)}
+                className="px-4 py-2.5 rounded-lg border border-white/10 text-dash-muted text-sm hover:bg-white/5 transition-colors cursor-pointer">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  )
+}
