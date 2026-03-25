@@ -3,7 +3,7 @@ import { useGameDetail } from '../contexts/GameDetailContext'
 import { useUserGames } from '../contexts/UserGamesContext'
 import { parseTime, formatTime, getConsoleStyle, daysBetween, todayStr, formatDateBR } from '../utils/helpers'
 import ConsoleBadge from './ConsoleBadge'
-import { X, Clock, Target, Calendar, Star, Flame, TrendingUp, Gamepad2, Plus, Timer } from 'lucide-react'
+import { X, Clock, Target, Calendar, Star, Flame, TrendingUp, Gamepad2, Plus, Timer, Trophy } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 function StatPill({ icon, label, value, color }) {
@@ -127,6 +127,7 @@ function SessionLogger({ game }) {
   const [open, setOpen] = useState(false)
   const [inicio, setInicio] = useState('')
   const [fim, setFim] = useState('')
+  const [marcarZerado, setMarcarZerado] = useState(false)
   const [saving, setSaving] = useState(false)
 
   const duracao = (() => {
@@ -145,13 +146,31 @@ function SessionLogger({ game }) {
     setSaving(true)
     const currentTempo = parseTime(game.tempo)
     const newTempo = Math.round((currentTempo + duracao) * 100) / 100
-    const err = await updateGame(game._id, { tempo: newTempo })
+    const today = new Date().toISOString().split('T')[0]
+    const year = new Date().getFullYear()
+
+    const fields = { tempo: newTempo }
+    if (marcarZerado) {
+      fields.status = 'zerado'
+      fields.data_zerado = today
+      fields.ano_zerado = year
+    }
+
+    const err = await updateGame(game._id, fields)
     if (!err) {
-      toast.success(`+${formatTime(duracao)} registrado!`)
+      const msg = marcarZerado
+        ? `🏆 ${game.nome} ZERADO! +${formatTime(duracao)} registrado`
+        : `+${formatTime(duracao)} registrado!`
+      toast.success(msg)
       await reload()
-      openGame({ ...game, tempo: newTempo })
+      if (marcarZerado) {
+        openGame({ ...game, tempo: newTempo, data_zerado: today, ano_zerado: year, _status: 'zerado' })
+      } else {
+        openGame({ ...game, tempo: newTempo })
+      }
       setInicio('')
       setFim('')
+      setMarcarZerado(false)
       setOpen(false)
     } else {
       toast.error('Erro ao salvar sessão')
@@ -204,6 +223,27 @@ function SessionLogger({ game }) {
           +{formatTime(duracao)} será adicionado ({formatTime(parseTime(game.tempo))} → {formatTime(parseTime(game.tempo) + duracao)})
         </div>
       )}
+      {/* Marcar como zerado */}
+      <label className="mt-3 flex items-center gap-2 cursor-pointer group">
+        <input
+          type="checkbox"
+          checked={marcarZerado}
+          onChange={e => setMarcarZerado(e.target.checked)}
+          className="hidden"
+        />
+        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+          marcarZerado
+            ? 'bg-accent-success border-accent-success'
+            : 'border-white/20 group-hover:border-accent-success/50'
+        }`}>
+          {marcarZerado && <Trophy size={12} strokeWidth={3} className="text-black" />}
+        </div>
+        <span className={`text-xs font-black uppercase tracking-wider transition-colors ${
+          marcarZerado ? 'text-accent-success' : 'text-dash-muted group-hover:text-white'
+        }`}>
+          🏆 Zerado! (finalizar jogo)
+        </span>
+      </label>
     </div>
   )
 }

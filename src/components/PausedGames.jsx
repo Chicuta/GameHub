@@ -1,9 +1,10 @@
+import { useState } from 'react'
 import { parseTime, formatTime, getConsoleStyle } from '../utils/helpers'
 import { useGameDetail } from '../contexts/GameDetailContext'
 import ConsoleBadge from './ConsoleBadge'
 import SectionTitle from './SectionTitle'
 import HltbBar from './HltbBar'
-import { Pause } from 'lucide-react'
+import { Pause, ChevronDown } from 'lucide-react'
 
 function PausedCard({ game }) {
   const { openGame } = useGameDetail()
@@ -33,16 +34,22 @@ function PausedCard({ game }) {
 }
 
 export default function PausedGames({ pausados }) {
+  const [open, setOpen] = useState(true)
   if (!pausados || pausados.length === 0) return null
 
   const sorted = [...pausados].sort((a, b) => parseTime(b.tempo) - parseTime(a.tempo))
 
   return (
     <div className="mb-8">
-      <SectionTitle icon={<Pause size={22} strokeWidth={2.5} className="text-accent-purple" />}>PAUSADOS</SectionTitle>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {sorted.map(g => <PausedCard key={g.nome} game={g} />)}
-      </div>
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between cursor-pointer mb-4 group">
+        <SectionTitle icon={<Pause size={22} strokeWidth={2.5} className="text-accent-purple" />}>PAUSADOS <span className="text-dash-muted text-sm font-normal ml-1">({pausados.length})</span></SectionTitle>
+        <ChevronDown size={20} className={`text-dash-muted transition-transform duration-300 group-hover:text-accent-purple ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {sorted.map(g => <PausedCard key={g.nome} game={g} />)}
+        </div>
+      )}
     </div>
   )
 }

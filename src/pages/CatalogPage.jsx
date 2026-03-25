@@ -1,10 +1,12 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useUserGames } from '../contexts/UserGamesContext'
-import { Search, SlidersHorizontal, BookOpen, Gamepad2, Star, X } from 'lucide-react'
+import { Search, SlidersHorizontal, BookOpen, Gamepad2, Star, X, Globe, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import SectionTitle from '../components/SectionTitle'
+
+const RAWG_KEY = import.meta.env.VITE_RAWG_API_KEY
 
 const STATUS_OPTIONS = [
   { value: 'jogando', label: '▶ Jogando' },
@@ -37,6 +39,9 @@ export default function CatalogPage() {
   const [genreFilter, setGenreFilter] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [selectedGame, setSelectedGame] = useState(null)
+  const [rawgResults, setRawgResults] = useState([])
+  const [rawgLoading, setRawgLoading] = useState(false)
+  const [rawgSearched, setRawgSearched] = useState(false)
 
   // Fetch all games from DB
   useEffect(() => {
@@ -104,6 +109,73 @@ export default function CatalogPage() {
 
   const selectCls = 'bg-black/40 border border-white/10 rounded-lg px-2.5 py-1.5 text-white text-xs font-bold focus:outline-none focus:border-accent-cyan transition-colors appearance-none cursor-pointer'
 
+  // ── RAWG live search ────────────────────────────────
+  const searchRawg = useCallback(async () => {
+    if (!search.trim() || !RAWG_KEY) return
+    setRawgLoading(true)
+    setRawgSearched(true)
+    try {
+      const res = await fetch(`https://api.rawg.io/api/games?key=${RAWG_KEY}&search=${encodeURIComponent(search.trim())}&page_size=20`)
+      if (!res.ok) throw new Error('RAWG request failed')
+      const data = await res.json()
+      // Filter out games already in local catalog (by rawg_id or by matching name)
+      const localNames = new Set(allGames.map(g => g.nome.toLowerCase()))
+      const results = (data.results || []).filter(g =>
+        !allGames.some(lg => lg.rawg_id === g.id) && !localNames.has(g.name.toLowerCase())
+      )
+      setRawgResults(results)
+    } catch (err) {
+      console.error('RAWG search error:', err)
+      toast.error('Erro ao buscar na RAWG')
+      setRawgResults([])
+    } finally {
+      setRawgLoading(false)
+    }
+  }, [search, allGames])
+
+  // Import a RAWG game into local DB
+  async function importRawgGame(rawgGame) {
+    if (!supabase) return null
+    const generos = (rawgGame.genres || []).map(g => g.name)
+    const plataformas = (rawgGame.platforms || []).map(p => p.platform?.name).filter(Boolean)
+
+    const row = {
+      rawg_id: rawgGame.id,
+      nome: rawgGame.name,
+      slug: rawgGame.slug,
+      capa: rawgGame.background_image || null,
+      generos: generos.length > 0 ? generos : null,
+      plataformas: plataformas.length > 0 ? plataformas : null,
+      data_lancamento: rawgGame.released || null,
+      metacritic: rawgGame.metacritic || null,
+      rawg_rating: rawgGame.rating || null,
+    }
+
+    const { data, error } = await supabase
+      .from('games')
+      .upsert(row, { onConflict: 'rawg_id' })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Import RAWG game error:', error)
+      toast.error('Erro ao importar jogo')
+      return null
+    }
+
+    // Add to local state
+    setAllGames(prev => [...prev, data])
+    setRawgResults(prev => prev.filter(g => g.id !== rawgGame.id))
+    toast.success(`${rawgGame.name} importado ao catálogo!`)
+    return data
+  }
+
+  // Reset RAWG results when search changes
+  useEffect(() => {
+    setRawgResults([])
+    setRawgSearched(false)
+  }, [search])
+
   return (
     <div className="max-w-5xl mx-auto">
       <div className="bg-dash-bg/80 backdrop-blur-xl rounded-2xl border border-dash-border p-5">
@@ -138,6 +210,18 @@ export default function CatalogPage() {
               <span className="bg-accent-cyan text-dash-bg text-[0.6em] font-black rounded-full w-4 h-4 flex items-center justify-center">1</span>
             )}
           </button>
+
+          {/* RAWG search button */}
+          {search.trim().length >= 2 && RAWG_KEY && (
+            <button
+              onClick={searchRawg}
+              disabled={rawgLoading}
+              className="flex items-center gap-1 text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg border border-accent-purple/30 text-accent-purple hover:bg-accent-purple/10 transition-colors cursor-pointer disabled:opacity-50"
+            >
+              {rawgLoading ? <Loader2 size={14} className="animate-spin" /> : <Globe size={14} strokeWidth={2.5} />}
+              Buscar na RAWG
+            </button>
+          )}
         </div>
 
         {/* Filter row */}
@@ -188,13 +272,82 @@ export default function CatalogPage() {
             ))}
           </div>
         )}
-      </div>
 
-      {/* Modal */}
+        {/* RAWG results */}
+        {rawgSearched && (
+          <div className="mt-8 border-t border-white/5 pt-6">
+            <h3 className="font-heading font-black text-white uppercase tracking-wider text-sm mb-4 flex items-center gap-2">
+              <Globe size={18} className="text-accent-purple" />
+              Resultados da RAWG
+              <span className="text-dash-muted text-xs font-normal">({rawgResults.length} novos)</span>
+            </h3>
+            {rawgLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 size={24} className="animate-spin text-accent-purple" />
+              </div>
+            ) : rawgResults.length === 0 ? (
+              <p className="text-dash-muted text-sm text-center py-6">Nenhum jogo novo encontrado na RAWG para "{search}"</p>
+            ) : (
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                {rawgResults.map(game => (
+                  <RawgCard key={game.id} game={game} onImport={importRawgGame} onSelect={setSelectedGame} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
       {selectedGame && (
         <CatalogModal game={selectedGame} onClose={() => setSelectedGame(null)} />
       )}
     </div>
+  )
+}
+
+/* ── RAWG Card ────────────────────────────────────── */
+function RawgCard({ game, onImport, onSelect }) {
+  const [importing, setImporting] = useState(false)
+
+  async function handleClick() {
+    setImporting(true)
+    const imported = await onImport(game)
+    setImporting(false)
+    if (imported) onSelect(imported)
+  }
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={importing}
+      className="bg-dash-surface rounded-lg border border-accent-purple/20 overflow-hidden flex flex-col h-[180px] sm:h-[220px] transition-all duration-300 hover:scale-[1.03] hover:border-accent-purple hover:shadow-[0_0_12px_rgba(168,85,247,0.15)] cursor-pointer group text-left w-full disabled:opacity-50 relative"
+    >
+      {importing && (
+        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
+          <Loader2 size={20} className="animate-spin text-accent-purple" />
+        </div>
+      )}
+      <div className="relative flex-1 w-full bg-black flex items-center justify-center overflow-hidden">
+        {game.background_image ? (
+          <img src={game.background_image} alt={game.name} className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+        ) : (
+          <Gamepad2 size={28} className="text-dash-muted" />
+        )}
+        {game.metacritic && (
+          <span className={`absolute top-1.5 right-1.5 text-[0.6em] font-black px-1.5 py-0.5 rounded ${
+            game.metacritic >= 75 ? 'bg-accent-success/90 text-white' :
+            game.metacritic >= 50 ? 'bg-accent-gold/90 text-dash-bg' :
+            'bg-accent-danger/90 text-white'
+          }`}>
+            {game.metacritic}
+          </span>
+        )}
+        <span className="absolute top-1.5 left-1.5 text-[0.55em] font-black px-1.5 py-0.5 rounded bg-accent-purple/90 text-white">RAWG</span>
+      </div>
+      <div className="px-2 py-1.5 bg-black/60 border-t border-accent-purple/20">
+        <div className="font-black text-[0.7em] text-white truncate">{game.name}</div>
+        <div className="text-[0.55em] text-dash-muted truncate">{game.genres?.map(g => g.name).slice(0, 2).join(', ')}</div>
+      </div>
+    </button>
   )
 }
 

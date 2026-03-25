@@ -4,8 +4,7 @@ import { useAuth } from './AuthContext'
 
 const UserGamesContext = createContext({})
 
-/*  Transforma rows do Supabase no mesmo shape que games.json usa,
-    para que TODOS os componentes existentes continuem funcionando sem mudanças. */
+/*  Transforma rows do Supabase no shape que os componentes esperam. */
 function rowsToLegacy(rows) {
   const jogando = []
   const zerados = []
