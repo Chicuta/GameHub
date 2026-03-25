@@ -68,23 +68,24 @@
   - Jogos agrupados por console com mini-cards e checkmark de conclusão
   - Ordenação: em progresso → não iniciado → 100%
 
-### Fase 2 — Enhanced Interactions
+### ✅ Fase 2 — Enhanced Interactions (CONCLUÍDA)
 > Features que tornam o sistema mais dinâmico.
 
-- [ ] **2.1 Session Logger**
-  - No Game Detail, botão "Registrar Sessão"
-  - Campos: data, hora início, hora fim
-  - Cálculo automático de duração
-  - Atualiza tempo total do jogo
+- [x] **2.1 Session Logger** → `GameDetailModal.jsx`
+  - Botão "Registrar Sessão" no modal de jogos com status jogando/pausado
+  - Campos hora início e hora fim com cálculo automático de duração
+  - Preview do tempo antes de salvar (ex: 5h → 7h30)
+  - Atualiza Supabase `user_games.tempo` e recarrega dados em tempo real
 
-- [ ] **2.2 Genre Distribution**
-  - Gráfico de barras horizontais por gênero
-  - Similar ao `BacklogByPlatform` mas agrupado por gênero
+- [x] **2.2 Genre Distribution** → `GenreDistribution.jsx`
+  - Accordion com barras horizontais por gênero (todos os jogos)
+  - Cores por gênero, % de conclusão
+  - Ordenado por quantidade
 
-- [ ] **2.3 Backlog Health**
-  - Score de saúde (backlog total vs velocidade de conclusão)
-  - Indicador visual: saudável / atenção / crítico
-  - Contagem de jogos VIP/prioritários
+- [x] **2.3 Backlog Health** → `BacklogHealth.jsx`
+  - Score gauge circular (0-100) com label: Saudável / Atenção / Crítico
+  - Métricas: pendentes, ritmo mensal, tempo estimado p/ zerar tudo, HLTB total
+  - Indicadores visuais com ícones e cores adaptativas
 
 ### Fase 3 — Polish & Extras
 > Polish final e melhorias visuais.
@@ -102,6 +103,15 @@
   - Swipe gestures no Game Detail Modal
 
 ---
+
+## 📂 ARQUIVOS DA FASE 2
+
+| Arquivo | Tipo | Descrição |
+|---------|------|-----------|
+| `src/components/GameDetailModal.jsx` | Editado | Adicionado SessionLogger (hora início/fim → salva tempo) |
+| `src/components/GenreDistribution.jsx` | Novo | Accordion com barras por gênero |
+| `src/components/BacklogHealth.jsx` | Novo | Gauge de saúde do backlog + métricas |
+| `src/App.jsx` | Editado | Integrou GenreDistribution e BacklogHealth |
 
 ## 📂 ARQUIVOS DA FASE 1
 
@@ -126,5 +136,5 @@
 | Fase | Progresso |
 |------|-----------|
 | Fase 1 — Core Pages | ✅ 3/3 |
-| Fase 2 — Interactions | ⬜ 0/3 |
+| Fase 2 — Interactions | ✅ 3/3 |
 | Fase 3 — Polish & Extras | ⬜ 0/3 |
