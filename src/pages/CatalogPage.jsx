@@ -421,7 +421,6 @@ function CatalogModal({ game, onClose }) {
   const [form, setForm] = useState({
     status: 'jogando', nota: '', tempo: '', anoJogado: '',
     console: game.plataformas?.[0] || '',
-    hltb: game.hltb_main ? String(game.hltb_main) : '',
   })
   const [saving, setSaving] = useState(false)
 
@@ -444,7 +443,7 @@ function CatalogModal({ game, onClose }) {
         console: form.console || null,
         nota: form.nota ? parseInt(form.nota) : null,
         tempo: form.tempo ? parseFloat(form.tempo) : 0,
-        hltb: form.hltb ? parseFloat(form.hltb) : null,
+        hltb: game.hltb_main ? parseFloat(game.hltb_main) : null,
         data_inicio: (form.status === 'jogando' || form.status === 'pausado') ? today : null,
         data_zerado: isZerado ? (form.status === 'jogado' && form.anoJogado ? `${form.anoJogado}-01-01` : today) : null,
         ano_zerado: isZerado ? (form.status === 'jogado' && form.anoJogado ? parseInt(form.anoJogado) : year) : null,
@@ -498,6 +497,11 @@ function CatalogModal({ game, onClose }) {
               </div>
             ) : null })()}
             <div className="text-[0.65rem] text-dash-muted mt-1.5 line-clamp-2">{game.plataformas?.join(', ')}</div>
+            {game.hltb_main > 0 && (
+              <div className="flex items-center gap-1 mt-1.5 text-xs text-dash-muted">
+                <span className="font-bold text-accent-cyan">HLTB</span> {game.hltb_main}h
+              </div>
+            )}
             {game.descricao && (
               <p className="text-dash-muted text-xs mt-2 line-clamp-3">{game.descricao}</p>
             )}
@@ -544,10 +548,6 @@ function CatalogModal({ game, onClose }) {
               <div>
                 <label className={labelCls}>Horas Jogadas</label>
                 <input type="number" min="0" step="0.5" value={form.tempo} onChange={e => setForm(f => ({ ...f, tempo: e.target.value }))} placeholder="0" className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>HLTB (horas)</label>
-                <input type="number" min="0" step="0.5" value={form.hltb} onChange={e => setForm(f => ({ ...f, hltb: e.target.value }))} placeholder="Estimado" className={inputCls} />
               </div>
               {form.status === 'jogado' && (
                 <div>

@@ -118,6 +118,75 @@ function EtaSection({ game }) {
   )
 }
 
+const PLATFORM_OPTIONS = [
+  'Arcade', 'Dreamcast', 'Game Boy', 'Game Boy Color', 'Game Boy Advance',
+  'Game Gear', 'Master System', 'Mega Drive', 'Neo Geo', 'Neo Geo CD',
+  'NeoGeo Pocket', 'Nes', 'Nintendo DS', 'Nintendo 3DS', 'Nintendo 64',
+  'Pc Engine', 'Playstation 1', 'Playstation 2', 'Playstation 3',
+  'Playstation 4', 'Playstation 5', 'Sega CD', 'Sega Saturn',
+  'SNES', 'Steam Deck', 'Nintendo Switch', 'Wii', 'Wonderswan',
+  'Xbox 360', 'Xbox One', 'Xbox Series', 'PC',
+]
+
+function PlatformEditor({ game, status }) {
+  const { t } = useTranslation()
+  const { updateGame, reload } = useUserGames()
+  const { openGame } = useGameDetail()
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  async function handleChange(newConsole) {
+    if (newConsole === game.console || !newConsole) {
+      setEditing(false)
+      return
+    }
+    setSaving(true)
+    if (game._id) {
+      const err = await updateGame(game._id, { console: newConsole })
+      if (!err) {
+        toast.success(t('gameDetail.platformChanged'))
+        await reload()
+        openGame({ ...game, console: newConsole })
+      }
+    } else {
+      openGame({ ...game, console: newConsole })
+    }
+    setSaving(false)
+    setEditing(false)
+  }
+
+  if (editing) {
+    return (
+      <select
+        autoFocus
+        value={game.console || ''}
+        onChange={e => handleChange(e.target.value)}
+        onBlur={() => setEditing(false)}
+        disabled={saving}
+        className="bg-black/60 border border-accent-cyan/40 rounded text-[0.6em] font-bold text-white px-1.5 py-0.5 focus:outline-none cursor-pointer"
+      >
+        {game.console && !PLATFORM_OPTIONS.includes(game.console) && (
+          <option value={game.console}>{game.console}</option>
+        )}
+        {PLATFORM_OPTIONS.map(p => (
+          <option key={p} value={p}>{p}</option>
+        ))}
+      </select>
+    )
+  }
+
+  return (
+    <button
+      onClick={() => setEditing(true)}
+      className="inline-flex items-center gap-1 cursor-pointer group"
+      title={t('gameDetail.changePlatform')}
+    >
+      <ConsoleBadge console={game.console} />
+      <Pencil size={10} strokeWidth={2.5} className="text-dash-muted opacity-0 group-hover:opacity-100 transition-opacity" />
+    </button>
+  )
+}
+
 const statusConfig = {
   jogando: { label: 'status.playing', color: '#00f5ff', icon: <Flame size={14} strokeWidth={2.5} /> },
   zerado: { label: 'status.completed', color: '#00ff9f', icon: <Star size={14} strokeWidth={2.5} /> },
@@ -162,9 +231,9 @@ function SessionLogger({ game, onSessionAdded }) {
       fields.status = 'zerado'
       fields.data_zerado = today
       fields.ano_zerado = year
-    } else if (game._status === 'pausado') {
+    } else if (game._status === 'pausado' || game._status === 'backlog' || status === 'backlog') {
       fields.status = 'jogando'
-      fields.data_inicio = fields.data_inicio || today
+      fields.data_inicio = game.data_inicio || today
     }
 
     // Save session record
@@ -188,7 +257,7 @@ function SessionLogger({ game, onSessionAdded }) {
       await reload()
       if (marcarZerado) {
         openGame({ ...game, tempo: newTempo, data_zerado: today, ano_zerado: year, _status: 'zerado' })
-      } else if (game._status === 'pausado') {
+      } else if (game._status === 'pausado' || game._status === 'backlog' || status === 'backlog') {
         openGame({ ...game, tempo: newTempo, _status: 'jogando', data_inicio: game.data_inicio || today })
       } else {
         openGame({ ...game, tempo: newTempo })
@@ -451,6 +520,58 @@ function SessionHistory({ game }) {
   )
 }
 
+/* ── Remove from Backlog ──────────────────────── */
+function RemoveFromBacklog({ game }) {
+  const { t } = useTranslation()
+  const { removeGame, reload } = useUserGames()
+  const { closeGame } = useGameDetail()
+  const [confirming, setConfirming] = useState(false)
+  const [removing, setRemoving] = useState(false)
+
+  async function handleRemove() {
+    setRemoving(true)
+    const err = await removeGame(game._id)
+    if (!err) {
+      toast.success(t('gameDetail.removedFromBacklog'))
+      await reload()
+      closeGame()
+    }
+    setRemoving(false)
+  }
+
+  if (confirming) {
+    return (
+      <div className="bg-red-500/10 rounded-xl p-4 border border-red-500/30">
+        <p className="text-xs font-bold text-red-400 mb-3 text-center">{t('gameDetail.removeConfirm')}</p>
+        <div className="flex gap-2 justify-center">
+          <button
+            onClick={handleRemove}
+            disabled={removing}
+            className="px-4 py-2 rounded-lg bg-red-500/20 text-red-400 font-black text-xs uppercase tracking-wider border border-red-500/30 hover:bg-red-500/30 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {removing ? '...' : t('common.delete')}
+          </button>
+          <button
+            onClick={() => setConfirming(false)}
+            className="px-4 py-2 rounded-lg bg-white/5 text-dash-muted font-black text-xs uppercase tracking-wider border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
+          >
+            {t('common.cancel')}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <button
+      onClick={() => setConfirming(true)}
+      className="w-full py-2.5 rounded-xl border-2 border-dashed border-red-500/30 text-red-400 font-heading font-black uppercase tracking-wider text-xs hover:bg-red-500/5 hover:border-red-500/50 transition-all cursor-pointer flex items-center justify-center gap-2"
+    >
+      <Trash2 size={14} strokeWidth={2.5} /> {t('gameDetail.removeFromBacklog')}
+    </button>
+  )
+}
+
 function getGameStatus(game) {
   if (game.data_zerado || game.ano_zerado) return 'zerado'
   if (game.ano_abandonado) return 'abandonado'
@@ -593,7 +714,11 @@ export default function GameDetailModal() {
                 >
                   {cfg.icon} {t(cfg.label)}
                 </span>
-                <ConsoleBadge console={game.console} />
+                {(status === 'backlog') ? (
+                  <PlatformEditor game={game} status={status} />
+                ) : (
+                  <ConsoleBadge console={game.console} />
+                )}
                 {onFire && (
                   <span className="inline-flex items-center gap-0.5 text-[0.65em] font-black text-orange-500 bg-orange-500/10 border border-orange-500/25 px-2 py-0.5 rounded-full">
                     <Flame size={12} strokeWidth={2.5} className="animate-flame" /> ON FIRE
@@ -659,14 +784,19 @@ export default function GameDetailModal() {
           {/* ETA */}
           <EtaSection game={game} />
 
-          {/* session logger — only for active games with _id */}
-          {(status === 'jogando' || status === 'pausado') && (
+          {/* session logger — for active and backlog games with _id */}
+          {(status === 'jogando' || status === 'pausado' || status === 'backlog') && (
             <SessionLogger game={game} onSessionAdded={() => setSessionKey(k => k + 1)} />
           )}
 
           {/* session history */}
           {game._id && (
             <SessionHistory key={sessionKey} game={game} />
+          )}
+
+          {/* remove from backlog */}
+          {status === 'backlog' && game._id && (
+            <RemoveFromBacklog game={game} />
           )}
         </div>
       </div>

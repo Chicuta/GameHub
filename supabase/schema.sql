@@ -134,6 +134,7 @@ ALTER TABLE user_saga_games ENABLE ROW LEVEL SECURITY;
 -- games
 CREATE POLICY "Games: leitura pública" ON games FOR SELECT USING (true);
 CREATE POLICY "Games: insert autenticados" ON games FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Games: update autenticados" ON games FOR UPDATE USING (true) WITH CHECK (auth.role() = 'authenticated');
 
 -- profiles
 CREATE POLICY "Profiles: leitura pública" ON profiles FOR SELECT USING (true);

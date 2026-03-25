@@ -111,7 +111,14 @@
     "resultCount": "{{count}} game(s) found",
     "resultOne": "{{count}} game found",
     "resultMany": "{{count}} games found",
-    "emptyFiltered": "No games found with current filters."
+    "emptyFiltered": "No games found with current filters.",
+    "addGame": "Add Game",
+    "addSearchPlaceholder": "Search game to add to backlog...",
+    "addNoResults": "No games found in catalog.",
+    "addedToast": "{{name}} added to backlog!",
+    "groupByPlatform": "Group by platform",
+    "searchRawg": "Search RAWG",
+    "rawgNoResults": "No games found on RAWG."
   },
   "gameDetail": {
     "registerSession": "Log Session",
@@ -136,6 +143,11 @@
     "completedToast": "🏆 {{name}} COMPLETED! +{{time}} logged",
     "sessionToast": "+{{time}} logged!",
     "sessionError": "Error saving session",
+    "changePlatform": "Change platform",
+    "platformChanged": "Platform updated!",
+    "removeFromBacklog": "Remove from Backlog",
+    "removedFromBacklog": "Game removed from backlog!",
+    "removeConfirm": "Are you sure you want to remove this game?",
     "remaining_hltb": "{{time}} remaining",
     "overHltb": "+{{time}} over HLTB",
     "hltbReached": "✅ HLTB reached!"
@@ -161,7 +173,10 @@
     "backToSearch": "← Back to search",
     "addToCollection": "+ ADD TO COLLECTION",
     "addedToast": "{{name}} added!",
-    "gameRequired": "Game name is required"
+    "gameRequired": "Game name is required",
+    "searchRawg": "Search RAWG",
+    "rawgNoResults": "No games found on RAWG.",
+    "importedToast": "{{name}} imported to catalog!"
   },
   "catalog": {
     "title": "CATALOG ({{count}})",

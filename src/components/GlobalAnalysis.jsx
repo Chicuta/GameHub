@@ -81,7 +81,6 @@ const STATUS_OPTIONS = [
   { value: 'zerado', label: '✓ Zerado' },
   { value: 'jogado', label: '🏆 Jogado' },
   { value: 'pausado', label: '⏸ Pausado' },
-  { value: 'backlog', label: '■ Backlog' },
   { value: 'abandonado', label: '☠ Abandonado' },
 ]
 
@@ -360,15 +359,14 @@ function YearByYear({ allGames }) {
   ))
 }
 
-export default function GlobalAnalysis({ zerados, jogando = [], abandonados = [], backlog = [], pausados = [], updateGame, removeGame, reload }) {
+export default function GlobalAnalysis({ zerados, jogando = [], abandonados = [], pausados = [], updateGame, removeGame, reload }) {
   const { t } = useTranslation()
   const allGames = useMemo(() => [
     ...zerados.map(g => ({ ...g, _status: 'zerado' })),
     ...jogando.map(g => ({ ...g, _status: 'jogando' })),
     ...abandonados.map(g => ({ ...g, _status: 'abandonado' })),
-    ...backlog.map(g => ({ ...g, _status: 'backlog' })),
     ...pausados.map(g => ({ ...g, _status: 'pausado' })),
-  ], [zerados, jogando, abandonados, backlog, pausados])
+  ], [zerados, jogando, abandonados, pausados])
 
   const gamesWithNota = useMemo(() => allGames.filter(g => g.nota), [allGames])
 

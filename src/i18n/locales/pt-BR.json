@@ -111,7 +111,14 @@
     "resultCount": "{{count}} jogo(s) encontrado(s)",
     "resultOne": "{{count}} jogo encontrado",
     "resultMany": "{{count}} jogos encontrados",
-    "emptyFiltered": "Nenhum jogo encontrado com os filtros atuais."
+    "emptyFiltered": "Nenhum jogo encontrado com os filtros atuais.",
+    "addGame": "Adicionar",
+    "addSearchPlaceholder": "Buscar jogo para adicionar ao backlog...",
+    "addNoResults": "Nenhum jogo encontrado no catálogo.",
+    "addedToast": "{{name}} adicionado ao backlog!",
+    "groupByPlatform": "Agrupar por plataforma",
+    "searchRawg": "Buscar na RAWG",
+    "rawgNoResults": "Nenhum jogo encontrado na RAWG."
   },
   "gameDetail": {
     "registerSession": "Registrar Sessão",
@@ -136,6 +143,11 @@
     "completedToast": "🏆 {{name}} ZERADO! +{{time}} registrado",
     "sessionToast": "+{{time}} registrado!",
     "sessionError": "Erro ao salvar sessão",
+    "changePlatform": "Trocar plataforma",
+    "platformChanged": "Plataforma atualizada!",
+    "removeFromBacklog": "Remover do Backlog",
+    "removedFromBacklog": "Jogo removido do backlog!",
+    "removeConfirm": "Tem certeza que deseja remover este jogo?",
     "remaining_hltb": "{{time}} restantes",
     "overHltb": "+{{time}} além do HLTB",
     "hltbReached": "✅ HLTB atingido!"
@@ -161,7 +173,10 @@
     "backToSearch": "← Voltar à busca",
     "addToCollection": "+ ADICIONAR À COLEÇÃO",
     "addedToast": "{{name}} adicionado!",
-    "gameRequired": "Nome do jogo é obrigatório"
+    "gameRequired": "Nome do jogo é obrigatório",
+    "searchRawg": "Buscar na RAWG",
+    "rawgNoResults": "Nenhum jogo encontrado na RAWG.",
+    "importedToast": "{{name}} importado ao catálogo!"
   },
   "catalog": {
     "title": "CATÁLOGO ({{count}})",

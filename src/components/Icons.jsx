@@ -3,7 +3,7 @@ import {
   Gamepad2, Star, Trophy, Medal, Crown, Calendar, Clock,
   Zap, TrendingUp, BarChart3, Dna, Swords, Rocket, Gem,
   Sparkles, Scale, MonitorSmartphone, Keyboard, Smartphone,
-  CircleDot, Crosshair,
+  CircleDot, Crosshair, Globe, Loader2,
 } from 'lucide-react'
 
 // Ícone inline com tamanho padrão para texto
@@ -46,4 +46,6 @@ export const I = {
   phone:      (p) => <Smartphone {...d} {...p} />,
   dot:        (p) => <CircleDot {...d} {...p} />,
   crosshair:  (p) => <Crosshair {...d} {...p} />,
+  globe:      (p) => <Globe {...d} {...p} />,
+  loader:     (p) => <Loader2 {...d} {...p} />,
 }
