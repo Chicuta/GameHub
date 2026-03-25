@@ -3,8 +3,9 @@ import { fetchGotyByYear } from '../lib/gamesApi'
 import { Trophy, Star, Crown } from 'lucide-react'
 
 function getRating(game) {
-  if (game.metacritic) return Math.round(game.metacritic)
   if (game.igdb_rating) return Math.round(game.igdb_rating)
+  if (game.metacritic) return Math.round(game.metacritic)
+  if (game.rawg_rating) return Math.round(game.rawg_rating * 20)
   return null
 }
 

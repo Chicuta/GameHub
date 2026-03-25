@@ -32,6 +32,14 @@ const PLATFORM_LIST = [
 const inputCls = 'w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-cyan transition-colors'
 const labelCls = 'block text-xs font-bold uppercase tracking-wider text-dash-muted mb-1'
 
+/** Retorna a melhor nota disponível normalizada para escala 0-100 */
+function getGameRating(game) {
+  if (game.igdb_rating) return Math.round(game.igdb_rating)
+  if (game.metacritic) return game.metacritic
+  if (game.rawg_rating) return Math.round(game.rawg_rating * 20)
+  return null
+}
+
 export default function CatalogPage() {
   const [allGames, setAllGames] = useState([])
   const [loading, setLoading] = useState(true)
@@ -42,6 +50,16 @@ export default function CatalogPage() {
   const [rawgResults, setRawgResults] = useState([])
   const [rawgLoading, setRawgLoading] = useState(false)
   const [rawgSearched, setRawgSearched] = useState(false)
+  const [collapsedGenres, setCollapsedGenres] = useState(new Set())
+
+  function toggleGenre(genre) {
+    setCollapsedGenres(prev => {
+      const next = new Set(prev)
+      if (next.has(genre)) next.delete(genre)
+      else next.add(genre)
+      return next
+    })
+  }
 
   // Fetch all games from DB
   useEffect(() => {
@@ -257,19 +275,28 @@ export default function CatalogPage() {
           </div>
         ) : (
           <div className="space-y-8">
-            {groupedByGenre.map(({ genre, games }) => (
-              <div key={genre}>
-                <h3 className="font-heading font-black text-white uppercase tracking-wider text-sm mb-3 flex items-center gap-2">
-                  <span className="text-accent-cyan">#</span> {genre}
-                  <span className="text-dash-muted text-xs font-normal">({games.length})</span>
-                </h3>
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
-                  {games.map(game => (
-                    <CatalogCard key={`${genre}-${game.id}`} game={game} onClick={() => setSelectedGame(game)} />
-                  ))}
+            {groupedByGenre.map(({ genre, games }) => {
+              const collapsed = collapsedGenres.has(genre)
+              return (
+                <div key={genre}>
+                  <button
+                    onClick={() => toggleGenre(genre)}
+                    className="font-heading font-black text-white uppercase tracking-wider text-sm mb-3 flex items-center gap-2 cursor-pointer hover:text-accent-cyan transition-colors group/genre"
+                  >
+                    <span className={`transition-transform duration-200 ${collapsed ? '-rotate-90' : ''}`}>▾</span>
+                    <span className="text-accent-cyan">#</span> {genre}
+                    <span className="text-dash-muted text-xs font-normal">({games.length})</span>
+                  </button>
+                  {!collapsed && (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                      {games.map(game => (
+                        <CatalogCard key={`${genre}-${game.id}`} game={game} onClick={() => setSelectedGame(game)} />
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
 
@@ -326,11 +353,11 @@ function RawgCard({ game, onImport, onSelect }) {
           <Loader2 size={20} className="animate-spin text-accent-purple" />
         </div>
       )}
-      <div className="relative flex-1 w-full bg-black flex items-center justify-center overflow-hidden">
+      <div className="relative flex-1 w-full bg-black overflow-hidden">
         {game.background_image ? (
-          <img src={game.background_image} alt={game.name} className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+          <img src={game.background_image} alt={game.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
         ) : (
-          <Gamepad2 size={28} className="text-dash-muted" />
+          <div className="w-full h-full flex items-center justify-center"><Gamepad2 size={28} className="text-dash-muted" /></div>
         )}
         {game.metacritic && (
           <span className={`absolute top-1.5 right-1.5 text-[0.6em] font-black px-1.5 py-0.5 rounded ${
@@ -353,24 +380,25 @@ function RawgCard({ game, onImport, onSelect }) {
 
 /* ── Card ─────────────────────────────────────────── */
 function CatalogCard({ game, onClick }) {
+  const rating = getGameRating(game)
   return (
     <button
       onClick={onClick}
       className="bg-dash-surface rounded-lg border border-white/5 overflow-hidden flex flex-col h-[180px] sm:h-[220px] transition-all duration-300 hover:scale-[1.03] hover:border-accent-cyan hover:shadow-[0_0_12px_rgba(0,245,255,0.15)] cursor-pointer group text-left w-full"
     >
-      <div className="relative flex-1 w-full bg-black flex items-center justify-center overflow-hidden">
+      <div className="relative flex-1 w-full bg-black overflow-hidden">
         {game.capa ? (
-          <img src={game.capa} alt={game.nome} className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300" loading="lazy" />
+          <img src={game.capa} alt={game.nome} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
         ) : (
-          <Gamepad2 size={28} className="text-dash-muted" />
+          <div className="w-full h-full flex items-center justify-center"><Gamepad2 size={28} className="text-dash-muted" /></div>
         )}
-        {game.igdb_rating && (
+        {rating && (
           <span className={`absolute top-1.5 right-1.5 text-[0.6em] font-black px-1.5 py-0.5 rounded ${
-            game.igdb_rating >= 75 ? 'bg-accent-success/90 text-white' :
-            game.igdb_rating >= 50 ? 'bg-accent-gold/90 text-dash-bg' :
+            rating >= 75 ? 'bg-accent-success/90 text-white' :
+            rating >= 50 ? 'bg-accent-gold/90 text-dash-bg' :
             'bg-accent-danger/90 text-white'
           }`}>
-            {Math.round(game.igdb_rating)}
+            {rating}
           </span>
         )}
       </div>
@@ -454,18 +482,18 @@ function CatalogModal({ game, onClose }) {
             <div className="text-dash-muted text-xs mt-1.5">
               {game.data_lancamento?.substring(0, 4)} • {game.generos?.join(', ')}
             </div>
-            {game.igdb_rating && (
+            {(() => { const r = getGameRating(game); return r ? (
               <div className="flex items-center gap-1 mt-1.5">
                 <Star size={14} className="text-accent-gold" strokeWidth={2.5} />
                 <span className={`text-sm font-bold ${
-                  game.igdb_rating >= 75 ? 'text-accent-success' :
-                  game.igdb_rating >= 50 ? 'text-accent-gold' :
+                  r >= 75 ? 'text-accent-success' :
+                  r >= 50 ? 'text-accent-gold' :
                   'text-accent-danger'
                 }`}>
-                  {Math.round(game.igdb_rating)}
+                  {r}
                 </span>
               </div>
-            )}
+            ) : null })()}
             <div className="text-[0.65rem] text-dash-muted mt-1.5 line-clamp-2">{game.plataformas?.join(', ')}</div>
             {game.descricao && (
               <p className="text-dash-muted text-xs mt-2 line-clamp-3">{game.descricao}</p>

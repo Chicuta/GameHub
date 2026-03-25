@@ -190,11 +190,11 @@ function LocalSearch({ user, onDone }) {
                 </div>
                 <div className="text-[0.6rem] text-dash-muted mt-0.5 truncate">{g.plataformas?.join(', ')}</div>
               </div>
-              {g.igdb_rating && (
-                <span className={`text-sm font-bold px-2 py-1 rounded ${g.igdb_rating >= 75 ? 'bg-accent-success/10 text-accent-success' : g.igdb_rating >= 50 ? 'bg-accent-gold/10 text-accent-gold' : 'bg-accent-danger/10 text-accent-danger'}`}>
-                  {Math.round(g.igdb_rating)}
+              {(() => { const r = g.igdb_rating ? Math.round(g.igdb_rating) : g.metacritic ? g.metacritic : g.rawg_rating ? Math.round(g.rawg_rating * 20) : null; return r ? (
+                <span className={`text-sm font-bold px-2 py-1 rounded ${r >= 75 ? 'bg-accent-success/10 text-accent-success' : r >= 50 ? 'bg-accent-gold/10 text-accent-gold' : 'bg-accent-danger/10 text-accent-danger'}`}>
+                  {r}
                 </span>
-              )}
+              ) : null })()}
             </button>
           ))}
         </div>
@@ -214,7 +214,7 @@ function LocalSearch({ user, onDone }) {
           <h3 className="text-white font-black text-lg">{selected.nome}</h3>
           <div className="text-dash-muted text-xs mt-1">
             {selected.data_lancamento?.substring(0, 4)} • {selected.generos?.join(', ')}
-            {selected.igdb_rating && <> • <I.star className="inline-block align-[-0.125em] text-accent-gold" size="0.85em" /> {Math.round(selected.igdb_rating)}</>}
+            {(() => { const r = selected.igdb_rating ? Math.round(selected.igdb_rating) : selected.metacritic ? selected.metacritic : selected.rawg_rating ? Math.round(selected.rawg_rating * 20) : null; return r ? <> • <I.star className="inline-block align-[-0.125em] text-accent-gold" size="0.85em" /> {r}</> : null })()}
           </div>
           <div className="text-[0.6rem] text-dash-muted mt-1">{selected.plataformas?.join(', ')}</div>
           {selected.descricao && (
