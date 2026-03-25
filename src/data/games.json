@@ -1,0 +1,350 @@
+{
+  "jogando": [
+    {
+      "nome": "Elden Ring: Shadow of the Erdtree",
+      "console": "Steam Deck",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co5vmg.webp",
+      "tempo": 45,
+      "hltb": 80,
+      "data_inicio": "2026-02-10",
+      "data_fim": null
+    },
+    {
+      "nome": "Final Fantasy VII Rebirth",
+      "console": "PS5",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co6byp.webp",
+      "tempo": 32,
+      "hltb": 60,
+      "data_inicio": "2026-03-01",
+      "data_fim": "2026-04-15"
+    },
+    {
+      "nome": "Metroid Dread",
+      "console": "Switch",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co3t3b.webp",
+      "tempo": 6,
+      "hltb": 10,
+      "data_inicio": "2026-03-18",
+      "data_fim": null
+    },
+    {
+      "nome": "Hades II",
+      "console": "PC",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co5qxx.webp",
+      "tempo": 18,
+      "hltb": 30,
+      "data_inicio": "2026-01-20",
+      "data_fim": null
+    }
+  ],
+  "zerados": [
+    {
+      "nome": "Baldur's Gate 3",
+      "console": "PC",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co670h.webp",
+      "tempo": 120,
+      "nota": 10,
+      "genero": "RPG",
+      "ano_zerado": 2024,
+      "data_zerado": "2024-08-15"
+    },
+    {
+      "nome": "The Legend of Zelda: TOTK",
+      "console": "Switch",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co5vmg.webp",
+      "tempo": 95,
+      "nota": 10,
+      "genero": "Aventura",
+      "ano_zerado": 2023,
+      "data_zerado": "2023-06-20"
+    },
+    {
+      "nome": "God of War Ragnarök",
+      "console": "PS5",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co5s5v.webp",
+      "tempo": 52,
+      "nota": 9,
+      "genero": "Ação",
+      "ano_zerado": 2023,
+      "data_zerado": "2023-01-10"
+    },
+    {
+      "nome": "Hollow Knight",
+      "console": "Steam Deck",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1rgi.webp",
+      "tempo": 40,
+      "nota": 10,
+      "genero": "Metroidvania",
+      "ano_zerado": 2024,
+      "data_zerado": "2024-03-05"
+    },
+    {
+      "nome": "Resident Evil 4 Remake",
+      "console": "PS5",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co6bo4.webp",
+      "tempo": 18,
+      "nota": 9,
+      "genero": "Survival Horror",
+      "ano_zerado": 2024,
+      "data_zerado": "2024-04-20"
+    },
+    {
+      "nome": "Celeste",
+      "console": "Switch",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co3byy.webp",
+      "tempo": 12,
+      "nota": 9,
+      "genero": "Plataforma",
+      "ano_zerado": 2023,
+      "data_zerado": "2023-03-14"
+    },
+    {
+      "nome": "Persona 5 Royal",
+      "console": "PS4",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2t83.webp",
+      "tempo": 130,
+      "nota": 10,
+      "genero": "RPG",
+      "ano_zerado": 2023,
+      "data_zerado": "2023-09-01"
+    },
+    {
+      "nome": "Star Wars Jedi: Survivor",
+      "console": "PC",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co5w0w.webp",
+      "tempo": 25,
+      "nota": 7,
+      "genero": "Ação",
+      "ano_zerado": 2024,
+      "data_zerado": "2024-06-10"
+    },
+    {
+      "nome": "Disco Elysium",
+      "console": "PC",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1sfj.webp",
+      "tempo": 35,
+      "nota": 10,
+      "genero": "RPG",
+      "ano_zerado": 2024,
+      "data_zerado": "2024-02-14"
+    },
+    {
+      "nome": "Sekiro",
+      "console": "PC",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1r0f.webp",
+      "tempo": 45,
+      "nota": 10,
+      "genero": "Soulslike",
+      "ano_zerado": 2024,
+      "data_zerado": "2024-10-25"
+    },
+    {
+      "nome": "It Takes Two",
+      "console": "PS5",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2z8j.webp",
+      "tempo": 14,
+      "nota": 8,
+      "genero": "Co-op",
+      "ano_zerado": 2024,
+      "data_zerado": "2024-07-04"
+    },
+    {
+      "nome": "Stardew Valley",
+      "console": "Switch",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/xrpmydnu9rpxvxfjkiu7.webp",
+      "tempo": 60,
+      "nota": 8,
+      "genero": "Simulação",
+      "ano_zerado": 2023,
+      "data_zerado": "2023-04-20"
+    },
+    {
+      "nome": "Halo Infinite",
+      "console": "Xbox Series",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2dto.webp",
+      "tempo": 15,
+      "nota": 6,
+      "genero": "FPS",
+      "ano_zerado": 2023,
+      "data_zerado": "2023-02-05"
+    },
+    {
+      "nome": "Cyberpunk 2077: Phantom Liberty",
+      "console": "PC",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co6g2f.webp",
+      "tempo": 30,
+      "nota": 9,
+      "genero": "RPG",
+      "ano_zerado": 2024,
+      "data_zerado": "2024-01-15"
+    },
+    {
+      "nome": "Alan Wake 2",
+      "console": "PS5",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co6g50.webp",
+      "tempo": 20,
+      "nota": 9,
+      "genero": "Survival Horror",
+      "ano_zerado": 2024,
+      "data_zerado": "2024-11-10"
+    },
+    {
+      "nome": "Super Mario Bros. Wonder",
+      "console": "Switch",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co6bos.webp",
+      "tempo": 10,
+      "nota": 8,
+      "genero": "Plataforma",
+      "ano_zerado": 2024,
+      "data_zerado": "2024-12-20"
+    },
+    {
+      "nome": "Ghost of Tsushima",
+      "console": "PS4",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co2g14.webp",
+      "tempo": 50,
+      "nota": 9,
+      "genero": "Ação",
+      "ano_zerado": 2025,
+      "data_zerado": "2025-01-20"
+    },
+    {
+      "nome": "Astro Bot",
+      "console": "PS5",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co8fbb.webp",
+      "tempo": 12,
+      "nota": 9,
+      "genero": "Plataforma",
+      "ano_zerado": 2025,
+      "data_zerado": "2025-02-14"
+    },
+    {
+      "nome": "The Witcher 3: Wild Hunt",
+      "console": "Steam Deck",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co1wyy.webp",
+      "tempo": 100,
+      "nota": 10,
+      "genero": "RPG",
+      "ano_zerado": 2025,
+      "data_zerado": "2025-04-10"
+    },
+    {
+      "nome": "Dead Space Remake",
+      "console": "PS5",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co4jnl.webp",
+      "tempo": 15,
+      "nota": 8,
+      "genero": "Survival Horror",
+      "ano_zerado": 2025,
+      "data_zerado": "2025-03-08"
+    },
+    {
+      "nome": "Lies of P",
+      "console": "PC",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co6fts.webp",
+      "tempo": 30,
+      "nota": 8,
+      "genero": "Soulslike",
+      "ano_zerado": 2025,
+      "data_zerado": "2025-05-25"
+    },
+    {
+      "nome": "Hi-Fi Rush",
+      "console": "PC",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co5rya.webp",
+      "tempo": 12,
+      "nota": 8,
+      "genero": "Ação",
+      "ano_zerado": 2025,
+      "data_zerado": "2025-06-15"
+    },
+    {
+      "nome": "Monster Hunter Wilds",
+      "console": "PS5",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co7wia.webp",
+      "tempo": 80,
+      "nota": 9,
+      "genero": "Ação RPG",
+      "ano_zerado": 2026,
+      "data_zerado": "2026-03-10"
+    },
+    {
+      "nome": "Like a Dragon: Pirate Yakuza",
+      "console": "PS5",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co952o.webp",
+      "tempo": 40,
+      "nota": 8,
+      "genero": "RPG",
+      "ano_zerado": 2026,
+      "data_zerado": "2026-02-28"
+    },
+    {
+      "nome": "Civilization VII",
+      "console": "PC",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co97pj.webp",
+      "tempo": 55,
+      "nota": 8,
+      "genero": "Estratégia",
+      "ano_zerado": 2026,
+      "data_zerado": "2026-03-20"
+    },
+    {
+      "nome": "Kingdom Come: Deliverance II",
+      "console": "PC",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co92zq.webp",
+      "tempo": 65,
+      "nota": 9,
+      "genero": "RPG",
+      "ano_zerado": 2026,
+      "data_zerado": "2026-01-15"
+    }
+  ],
+  "abandonados": [
+    {
+      "nome": "Forspoken",
+      "console": "PS5",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co57ht.webp",
+      "ano_abandonado": 2024
+    },
+    {
+      "nome": "Skull and Bones",
+      "console": "PC",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co3ldo.webp",
+      "ano_abandonado": 2024
+    },
+    {
+      "nome": "Redfall",
+      "console": "Xbox Series",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co5psp.webp",
+      "ano_abandonado": 2023
+    },
+    {
+      "nome": "Gotham Knights",
+      "console": "PS5",
+      "capa": "https://images.igdb.com/igdb/image/upload/t_cover_big/co51ll.webp",
+      "ano_abandonado": 2023
+    }
+  ],
+  "backlog": [
+    { "nome": "Silent Hill 2 Remake", "console": "PS5", "completed": false },
+    { "nome": "Chrono Cross", "console": "PlayStation 1", "completed": true },
+    { "nome": "Final Fantasy VI", "console": "SNES", "completed": false },
+    { "nome": "Castlevania: SOTN", "console": "PlayStation 1", "completed": true },
+    { "nome": "Metal Gear Solid", "console": "PlayStation 1", "completed": false },
+    { "nome": "Vagrant Story", "console": "PlayStation 1", "completed": false },
+    { "nome": "Mega Man X", "console": "SNES", "completed": true },
+    { "nome": "Secret of Mana", "console": "SNES", "completed": false },
+    { "nome": "Phantasy Star IV", "console": "Mega Drive", "completed": false },
+    { "nome": "Streets of Rage 2", "console": "Mega Drive", "completed": true },
+    { "nome": "Sonic CD", "console": "Sega CD", "completed": false },
+    { "nome": "Panzer Dragoon Saga", "console": "Sega Saturn", "completed": false },
+    { "nome": "Nights into Dreams", "console": "Sega Saturn", "completed": false },
+    { "nome": "Radiant Silvergun", "console": "Sega Saturn", "completed": false },
+    { "nome": "Shadow of the Colossus", "console": "PlayStation 2", "completed": true },
+    { "nome": "Okami", "console": "PlayStation 2", "completed": false },
+    { "nome": "Persona 4", "console": "PlayStation 2", "completed": false },
+    { "nome": "Dark Souls Remastered", "console": "Steam Deck", "completed": false },
+    { "nome": "Vampire Survivors", "console": "Steam Deck", "completed": true },
+    { "nome": "Slay the Spire", "console": "Steam Deck", "completed": false }
+  ]
+}
