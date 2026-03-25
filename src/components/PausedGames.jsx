@@ -36,7 +36,7 @@ function PausedCard({ game }) {
 
 export default function PausedGames({ pausados }) {
   const { t } = useTranslation()
-  const [open, setOpen] = useState(true)
+  const [open, setOpen] = useState(false)
   if (!pausados || pausados.length === 0) return null
 
   const sorted = [...pausados].sort((a, b) => parseTime(b.tempo) - parseTime(a.tempo))

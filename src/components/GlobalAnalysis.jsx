@@ -5,6 +5,7 @@ import SectionTitle from './SectionTitle'
 import Accordion from './Accordion'
 import { TrendingUp, Star, Dna, Gamepad2, BarChart3, List, CheckCircle2, Play, Skull, Clock, Pencil, Trash2, X, Save, CalendarDays, Search } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { supabase } from '../lib/supabase'
 
 function MiniBar({ width, color }) {
   return (
@@ -70,6 +71,7 @@ function BarChart({ entries, color }) {
 
 const STATUS_STYLE = {
   zerado: { label: 'Zerado', color: '#00ff9f', icon: <CheckCircle2 size={14} strokeWidth={2.5} /> },
+  jogado: { label: 'Jogado', color: '#a78bfa', icon: <CheckCircle2 size={14} strokeWidth={2.5} /> },
   jogando: { label: 'Jogando', color: '#00f5ff', icon: <Play size={14} strokeWidth={2.5} /> },
   pausado: { label: 'Pausado', color: '#bc13fe', icon: <Clock size={14} strokeWidth={2.5} /> },
   abandonado: { label: 'Abandonado', color: '#ff0055', icon: <Skull size={14} strokeWidth={2.5} /> },
@@ -96,6 +98,14 @@ const PLATFORM_LIST = [
   'Mobile', 'Outro',
 ]
 
+const GENRE_LIST = [
+  'Ação', 'Aventura', 'RPG', 'JRPG', 'Souls-like',
+  'FPS', 'TPS', 'Plataforma', 'Metroidvania',
+  'Puzzle', 'Estratégia', 'Simulação', 'Corrida',
+  'Esporte', 'Luta', 'Terror', 'Roguelike',
+  'Sandbox', 'Mundo Aberto', 'Visual Novel', 'Indie', 'Outro',
+]
+
 const inputCls = 'w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-cyan transition-colors'
 const labelCls = 'block text-xs font-bold uppercase tracking-wider text-dash-muted mb-1'
 
@@ -108,32 +118,37 @@ function EditForm({ game, onSave, onCancel, onDelete }) {
     console: game.console || '',
     hltb: game.hltb || '',
     anoZerado: game.ano_zerado ?? '',
+    genero: game.genero || '',
   })
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
-  const isZerado = form.status === 'zerado' || form.status === 'jogado'
+  const isFinished = form.status === 'zerado' || form.status === 'jogado'
 
   async function handleSubmit(e) {
     e.preventDefault()
+    const scrollY = window.scrollY
     setSaving(true)
     const today = new Date().toISOString().split('T')[0]
     const year = new Date().getFullYear()
-    const dbStatus = form.status === 'jogado' ? 'zerado' : form.status
-    const anoZ = isZerado ? (form.anoZerado ? parseInt(form.anoZerado) : year) : null
+    const anoZ = isFinished ? (form.anoZerado ? parseInt(form.anoZerado) : year) : null
     const fields = {
-      status: dbStatus,
+      status: form.status,
       console: form.console || null,
       nota: form.nota ? parseInt(form.nota) : null,
       tempo: form.tempo ? parseFloat(form.tempo) : 0,
       hltb: form.hltb ? parseFloat(form.hltb) : null,
       data_inicio: (form.status === 'jogando' || form.status === 'pausado') ? today : null,
-      data_zerado: isZerado ? (form.anoZerado ? `${form.anoZerado}-01-01` : today) : null,
+      data_zerado: isFinished ? (form.anoZerado ? `${form.anoZerado}-01-01` : today) : null,
       ano_zerado: anoZ,
       ano_abandonado: form.status === 'abandonado' ? year : null,
     }
     await onSave(game._id, fields)
+    if (form.genero !== (game.genero || '') && game._gameId) {
+      await supabase.from('games').update({ generos: form.genero ? [form.genero] : [] }).eq('id', game._gameId)
+    }
     setSaving(false)
+    requestAnimationFrame(() => window.scrollTo(0, scrollY))
   }
 
   async function handleDelete() {
@@ -184,7 +199,14 @@ function EditForm({ game, onSave, onCancel, onDelete }) {
           <label className={labelCls}>HLTB (horas)</label>
           <input type="number" min="0" step="0.01" value={form.hltb} onChange={e => setForm(f => ({ ...f, hltb: e.target.value }))} placeholder="—" className={inputCls} />
         </div>
-        {isZerado && (
+        <div>
+          <label className={labelCls}>{t('gameSearch.genre')}</label>
+          <input list="genre-list" value={form.genero} onChange={e => setForm(f => ({ ...f, genero: e.target.value }))} placeholder="—" className={inputCls} maxLength={50} />
+          <datalist id="genre-list">
+            {GENRE_LIST.map(g => <option key={g} value={g} />)}
+          </datalist>
+        </div>
+        {isFinished && (
           <div>
             <label className={labelCls}>{t('globalAnalysis.yearCompleted')}</label>
             <input type="number" min="1970" max={new Date().getFullYear()} value={form.anoZerado} onChange={e => setForm(f => ({ ...f, anoZerado: e.target.value }))} placeholder={String(new Date().getFullYear())} className={inputCls} />
@@ -267,7 +289,7 @@ function GameList({ allGames, updateGame, removeGame, reload }) {
               <div className="text-white font-bold text-sm truncate">{g.nome}</div>
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                 <span className="flex items-center gap-1 text-[0.65rem] font-bold uppercase" style={{ color: st.color }}>
-                  {st.icon} {t('status.' + g._status)}
+                  {st.icon} {st.label}
                 </span>
                 {g.console && <span className="text-[0.6rem] text-dash-muted">• {g.console}</span>}
                 {g.genero && <span className="text-[0.6rem] text-dash-muted">• {g.genero}</span>}
@@ -362,7 +384,7 @@ function YearByYear({ allGames }) {
 export default function GlobalAnalysis({ zerados, jogando = [], abandonados = [], pausados = [], updateGame, removeGame, reload }) {
   const { t } = useTranslation()
   const allGames = useMemo(() => [
-    ...zerados.map(g => ({ ...g, _status: 'zerado' })),
+    ...zerados.map(g => ({ ...g, _status: g._isJogado ? 'jogado' : 'zerado' })),
     ...jogando.map(g => ({ ...g, _status: 'jogando' })),
     ...abandonados.map(g => ({ ...g, _status: 'abandonado' })),
     ...pausados.map(g => ({ ...g, _status: 'pausado' })),

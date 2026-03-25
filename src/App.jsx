@@ -107,13 +107,13 @@ function Perfil() {
           <AnnualEvolution zerados={zerados} />
           <Retrospective zerados={zerados} />
           <HallOfFame zerados={zerados} />
-          <GlobalAnalysis zerados={zerados} jogando={jogando} abandonados={abandonados} pausados={pausados} updateGame={updateGame} removeGame={removeGame} reload={reload} />
           <BacklogBrowser backlog={backlog} onGameAdded={reload} />
           <SagasTracker />
           <GenreDistribution zerados={zerados} jogando={jogando} abandonados={abandonados} backlog={backlog} pausados={pausados} />
           <BacklogHealth zerados={zerados} jogando={jogando} backlog={backlog} pausados={pausados} abandonados={abandonados} />
           <BacklogByPlatform backlog={backlog} />
           <Cemetery abandonados={abandonados} />
+          <GlobalAnalysis zerados={zerados} jogando={jogando} abandonados={abandonados} pausados={pausados} updateGame={updateGame} removeGame={removeGame} reload={reload} />
         </>
       )}
     </div>

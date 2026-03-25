@@ -52,7 +52,7 @@ CREATE TABLE user_games (
   user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
   game_id INTEGER REFERENCES games(id) ON DELETE CASCADE NOT NULL,
   status TEXT NOT NULL DEFAULT 'backlog'
-    CHECK (status IN ('jogando', 'zerado', 'abandonado', 'backlog', 'pausado')),
+    CHECK (status IN ('jogando', 'zerado', 'jogado', 'abandonado', 'backlog', 'pausado')),
   nota INTEGER CHECK (nota IS NULL OR (nota >= 1 AND nota <= 10)),
   tempo NUMERIC DEFAULT 0,
   console TEXT,

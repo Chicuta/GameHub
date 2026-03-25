@@ -434,19 +434,18 @@ function CatalogModal({ game, onClose }) {
     try {
       const today = new Date().toISOString().split('T')[0]
       const year = new Date().getFullYear()
-      const isZerado = form.status === 'zerado' || form.status === 'jogado'
-      const dbStatus = form.status === 'jogado' ? 'zerado' : form.status
+      const isFinished = form.status === 'zerado' || form.status === 'jogado'
       const { error } = await supabase.from('user_games').upsert({
         user_id: user.id,
         game_id: game.id,
-        status: dbStatus,
+        status: form.status,
         console: form.console || null,
         nota: form.nota ? parseInt(form.nota) : null,
         tempo: form.tempo ? parseFloat(form.tempo) : 0,
         hltb: game.hltb_main ? parseFloat(game.hltb_main) : null,
         data_inicio: (form.status === 'jogando' || form.status === 'pausado') ? today : null,
-        data_zerado: isZerado ? (form.status === 'jogado' && form.anoJogado ? `${form.anoJogado}-01-01` : today) : null,
-        ano_zerado: isZerado ? (form.status === 'jogado' && form.anoJogado ? parseInt(form.anoJogado) : year) : null,
+        data_zerado: isFinished ? (form.anoJogado ? `${form.anoJogado}-01-01` : today) : null,
+        ano_zerado: isFinished ? (form.anoJogado ? parseInt(form.anoJogado) : year) : null,
         ano_abandonado: form.status === 'abandonado' ? year : null,
       }, { onConflict: 'user_id,game_id' })
       if (error) throw error
@@ -549,7 +548,7 @@ function CatalogModal({ game, onClose }) {
                 <label className={labelCls}>Horas Jogadas</label>
                 <input type="number" min="0" step="0.01" value={form.tempo} onChange={e => setForm(f => ({ ...f, tempo: e.target.value }))} placeholder="0" className={inputCls} />
               </div>
-              {form.status === 'jogado' && (
+              {(form.status === 'jogado' || form.status === 'zerado') && (
                 <div>
                   <label className={labelCls}>Ano que jogou</label>
                   <input type="number" min="1970" max={new Date().getFullYear()} value={form.anoJogado} onChange={e => setForm(f => ({ ...f, anoJogado: e.target.value }))} placeholder={String(new Date().getFullYear())} className={inputCls} />

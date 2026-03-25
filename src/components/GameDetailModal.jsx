@@ -197,9 +197,79 @@ function PlatformEditor({ game, status }) {
   )
 }
 
+const GENRE_OPTIONS = [
+  'Ação', 'Aventura', 'RPG', 'JRPG', 'Souls-like',
+  'FPS', 'TPS', 'Plataforma', 'Metroidvania',
+  'Puzzle', 'Estratégia', 'Simulação', 'Corrida',
+  'Esporte', 'Luta', 'Terror', 'Roguelike',
+  'Sandbox', 'Mundo Aberto', 'Visual Novel', 'Indie', 'Outro',
+]
+
+function GenreEditor({ game }) {
+  const { t } = useTranslation()
+  const { reload } = useUserGames()
+  const { openGame } = useGameDetail()
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  async function handleChange(newGenero) {
+    if (newGenero === game.genero || !newGenero) {
+      setEditing(false)
+      return
+    }
+    setSaving(true)
+    if (game._gameId) {
+      const { error } = await supabase
+        .from('games')
+        .update({ generos: [newGenero] })
+        .eq('id', game._gameId)
+      if (!error) {
+        toast.success(t('gameDetail.genreChanged'))
+        await reload()
+        openGame({ ...game, genero: newGenero })
+      }
+    }
+    setSaving(false)
+    setEditing(false)
+  }
+
+  if (editing) {
+    return (
+      <select
+        autoFocus
+        value={game.genero || ''}
+        onChange={e => handleChange(e.target.value)}
+        onBlur={() => setEditing(false)}
+        disabled={saving}
+        className="bg-black/60 border border-accent-purple/40 rounded text-[0.6em] font-bold text-white px-1.5 py-0.5 focus:outline-none cursor-pointer"
+      >
+        <option value="">{t('common.select')}</option>
+        {game.genero && !GENRE_OPTIONS.includes(game.genero) && (
+          <option value={game.genero}>{game.genero}</option>
+        )}
+        {GENRE_OPTIONS.map(g => (
+          <option key={g} value={g}>{g}</option>
+        ))}
+      </select>
+    )
+  }
+
+  return (
+    <button
+      onClick={() => setEditing(true)}
+      className="inline-flex items-center gap-1 cursor-pointer group text-[0.75em] text-dash-muted font-bold hover:text-accent-purple transition-colors"
+      title={t('gameDetail.changeGenre')}
+    >
+      {game.genero || t('gameDetail.addGenre')}
+      <Pencil size={10} strokeWidth={2.5} className="text-accent-purple/70 group-hover:text-accent-purple transition-colors" />
+    </button>
+  )
+}
+
 const statusConfig = {
   jogando: { label: 'status.playing', color: '#00f5ff', icon: <Flame size={14} strokeWidth={2.5} /> },
   zerado: { label: 'status.completed', color: '#00ff9f', icon: <Star size={14} strokeWidth={2.5} /> },
+  jogado: { label: 'status.played', color: '#a78bfa', icon: <Trophy size={14} strokeWidth={2.5} /> },
   pausado: { label: 'status.paused', color: '#bc13fe', icon: <Clock size={14} strokeWidth={2.5} /> },
   abandonado: { label: 'status.abandoned', color: '#ff0055', icon: <X size={14} strokeWidth={2.5} /> },
   backlog: { label: 'status.backlog', color: '#94a3b8', icon: <Target size={14} strokeWidth={2.5} /> },
@@ -221,12 +291,13 @@ function SessionLogger({ game, onSessionAdded }) {
     if (!inicio || !fim) return null
     const [h1, m1] = inicio.split(':').map(Number)
     const [h2, m2] = fim.split(':').map(Number)
-    const totalMin = (h2 * 60 + m2) - (h1 * 60 + m1)
+    let totalMin = (h2 * 60 + m2) - (h1 * 60 + m1)
+    if (totalMin <= 0) totalMin += 1440
     if (totalMin <= 0) return null
     return totalMin / 60
   })()
 
-  if (!game._id) return null
+  if (!game._id && !game._sagaGameId) return null
 
   async function handleSave() {
     if (!duracao || duracao <= 0) return
@@ -236,50 +307,101 @@ function SessionLogger({ game, onSessionAdded }) {
     const today = new Date().toISOString().split('T')[0]
     const year = new Date().getFullYear()
 
-    const fields = { tempo: newTempo }
-    if (marcarZerado) {
-      fields.status = 'zerado'
-      fields.data_zerado = today
-      fields.ano_zerado = year
-    } else if (game._status === 'pausado' || game._status === 'backlog' || status === 'backlog') {
-      fields.status = 'jogando'
-      fields.data_inicio = game.data_inicio || today
-    }
+    try {
+      let userGameId = game._id
 
-    // Save session record
-    if (user) {
-      await createSession({
-        user_game_id: game._id,
-        user_id: user.id,
-        session_date: sessionDate,
-        start_time: inicio || null,
-        end_time: fim || null,
-        duration: Math.round(duracao * 100) / 100,
-      })
-    }
+      // Saga game without user_games entry — create one
+      if (!userGameId && game._sagaGameId && user) {
+        // Find or create a games catalog entry
+        let gameId = null
+        const { data: found } = await supabase
+          .from('games')
+          .select('id')
+          .ilike('nome', game.nome)
+          .limit(1)
+          .single()
+        if (found) {
+          gameId = found.id
+        } else {
+          const { data: created, error: cErr } = await supabase
+            .from('games')
+            .insert({
+              nome: game.nome,
+              slug: game.nome.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+              capa: game.capa || null,
+              plataformas: game.console ? [game.console] : [],
+            })
+            .select('id')
+            .single()
+          if (cErr) throw cErr
+          gameId = created.id
+        }
 
-    const err = await updateGame(game._id, fields)
-    if (!err) {
-      const msg = marcarZerado
-        ? t('gameDetail.completedToast', { name: game.nome, time: formatTime(duracao) })
-        : t('gameDetail.sessionToast', { time: formatTime(duracao) })
-      toast.success(msg)
-      await reload()
-      if (marcarZerado) {
-        openGame({ ...game, tempo: newTempo, data_zerado: today, ano_zerado: year, _status: 'zerado' })
-      } else if (game._status === 'pausado' || game._status === 'backlog' || status === 'backlog') {
-        openGame({ ...game, tempo: newTempo, _status: 'jogando', data_inicio: game.data_inicio || today })
-      } else {
-        openGame({ ...game, tempo: newTempo })
+        // Create user_games entry as jogando
+        const { data: ug, error: ugErr } = await supabase
+          .from('user_games')
+          .upsert({
+            user_id: user.id,
+            game_id: gameId,
+            status: 'jogando',
+            console: game.console || null,
+            tempo: newTempo,
+            hltb: game.hltb ? parseFloat(game.hltb) : null,
+            data_inicio: today,
+          }, { onConflict: 'user_id,game_id' })
+          .select('id')
+          .single()
+        if (ugErr) throw ugErr
+        userGameId = ug.id
       }
-      onSessionAdded?.()
-      setInicio('')
-      setFim('')
-      setSessionDate(new Date().toISOString().split('T')[0])
-      setMarcarZerado(false)
-      setOpen(false)
-    } else {
-      toast.error(t('gameDetail.sessionError'))
+
+      const fields = { tempo: newTempo }
+      if (marcarZerado) {
+        fields.status = 'zerado'
+        fields.data_zerado = today
+        fields.ano_zerado = year
+      } else if (game._status === 'pausado' || game._status === 'backlog') {
+        fields.status = 'jogando'
+        fields.data_inicio = game.data_inicio || today
+      }
+
+      // Save session record
+      if (user && userGameId) {
+        await createSession({
+          user_game_id: userGameId,
+          user_id: user.id,
+          session_date: sessionDate,
+          start_time: inicio || null,
+          end_time: fim || null,
+          duration: Math.round(duracao * 100) / 100,
+        })
+      }
+
+      const err = await updateGame(userGameId, fields)
+      if (!err) {
+        const msg = marcarZerado
+          ? t('gameDetail.completedToast', { name: game.nome, time: formatTime(duracao) })
+          : t('gameDetail.sessionToast', { time: formatTime(duracao) })
+        toast.success(msg)
+        await reload()
+        if (marcarZerado) {
+          openGame({ ...game, _id: userGameId, tempo: newTempo, data_zerado: today, ano_zerado: year, _status: 'zerado' })
+        } else if (game._status === 'pausado' || game._status === 'backlog' || game._sagaGameId) {
+          openGame({ ...game, _id: userGameId, tempo: newTempo, _status: 'jogando', data_inicio: game.data_inicio || today })
+        } else {
+          openGame({ ...game, _id: userGameId, tempo: newTempo })
+        }
+        onSessionAdded?.()
+        setInicio('')
+        setFim('')
+        setSessionDate(new Date().toISOString().split('T')[0])
+        setMarcarZerado(false)
+        setOpen(false)
+      } else {
+        toast.error(t('gameDetail.sessionError'))
+      }
+    } catch (err) {
+      toast.error(err.message || t('gameDetail.sessionError'))
     }
     setSaving(false)
   }
@@ -423,7 +545,8 @@ function SessionHistory({ game }) {
     if (editData.start_time && editData.end_time) {
       const [h1, m1] = editData.start_time.split(':').map(Number)
       const [h2, m2] = editData.end_time.split(':').map(Number)
-      const totalMin = (h2 * 60 + m2) - (h1 * 60 + m1)
+      let totalMin = (h2 * 60 + m2) - (h1 * 60 + m1)
+      if (totalMin <= 0) totalMin += 1440
       if (totalMin > 0) newDuration = Math.round((totalMin / 60) * 100) / 100
     }
 
@@ -492,7 +615,7 @@ function SessionHistory({ game }) {
                         <input type="date" value={editData.session_date} onChange={e => setEditData({ ...editData, session_date: e.target.value })} className={inputCls} />
                         <input type="time" value={editData.start_time} onChange={e => setEditData({ ...editData, start_time: e.target.value })} className={inputCls} />
                         <input type="time" value={editData.end_time} onChange={e => setEditData({ ...editData, end_time: e.target.value })} className={inputCls} />
-                        <span className="text-xs font-bold text-center text-accent-cyan">{formatTime(editData.start_time && editData.end_time ? (() => { const [h1,m1]=editData.start_time.split(':').map(Number); const [h2,m2]=editData.end_time.split(':').map(Number); const min=(h2*60+m2)-(h1*60+m1); return min > 0 ? min/60 : editData.duration })() : editData.duration)}</span>
+                        <span className="text-xs font-bold text-center text-accent-cyan">{formatTime(editData.start_time && editData.end_time ? (() => { const [h1,m1]=editData.start_time.split(':').map(Number); const [h2,m2]=editData.end_time.split(':').map(Number); let min=(h2*60+m2)-(h1*60+m1); if(min<=0) min+=1440; return min > 0 ? min/60 : editData.duration })() : editData.duration)}</span>
                         <div className="flex gap-1">
                           <button onClick={() => handleEditSave(s.id)} className="text-accent-success hover:text-white cursor-pointer text-xs font-black">✓</button>
                           <button onClick={() => setEditing(null)} className="text-dash-muted hover:text-white cursor-pointer text-xs font-black">✕</button>
@@ -583,6 +706,7 @@ function RemoveFromBacklog({ game }) {
 }
 
 function getGameStatus(game) {
+  if (game._isJogado || game._status === 'jogado') return 'jogado'
   if (game.data_zerado || game.ano_zerado) return 'zerado'
   if (game.ano_abandonado) return 'abandonado'
   if (game.data_inicio && !game.data_fim) {
@@ -734,9 +858,9 @@ export default function GameDetailModal() {
               <h2 className="font-heading font-black text-white text-xl md:text-2xl leading-tight truncate">
                 {game.nome}
               </h2>
-              {game.genero && (
-                <div className="text-[0.75em] text-dash-muted font-bold mt-1">{game.genero}</div>
-              )}
+              <div className="mt-1">
+                <GenreEditor game={game} />
+              </div>
             </div>
           </div>
         </div>
@@ -790,8 +914,8 @@ export default function GameDetailModal() {
           {/* ETA */}
           <EtaSection game={game} />
 
-          {/* session logger — for active and backlog games with _id */}
-          {(status === 'jogando' || status === 'pausado' || status === 'backlog') && (
+          {/* session logger — for games with _id */}
+          {game._id && (
             <SessionLogger game={game} onSessionAdded={() => setSessionKey(k => k + 1)} />
           )}
 

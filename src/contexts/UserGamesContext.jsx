@@ -16,6 +16,7 @@ function rowsToLegacy(rows) {
     const g = r.games // join
     const base = {
       _id: r.id,
+      _gameId: r.game_id,
       nome: g.nome,
       console: r.console || g.plataformas?.[0] || '',
       capa: g.capa,
@@ -36,6 +37,14 @@ function rowsToLegacy(rows) {
       case 'zerado':
         zerados.push({
           ...base,
+          ano_zerado: r.ano_zerado || (r.data_zerado ? new Date(r.data_zerado).getFullYear() : null),
+          data_zerado: r.data_zerado,
+        })
+        break
+      case 'jogado':
+        zerados.push({
+          ...base,
+          _isJogado: true,
           ano_zerado: r.ano_zerado || (r.data_zerado ? new Date(r.data_zerado).getFullYear() : null),
           data_zerado: r.data_zerado,
         })
