@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { isSafeImageUrl, escapeIlike } from '../utils/helpers'
 import { I } from './Icons'
 import toast from 'react-hot-toast'
 
@@ -105,7 +106,7 @@ function LocalSearch({ user, onDone }) {
         const { data, error } = await supabase
           .from('games')
           .select('*')
-          .ilike('nome', `%${query}%`)
+          .ilike('nome', `%${escapeIlike(query)}%`)
           .order('igdb_rating', { ascending: false, nullsFirst: false })
           .limit(20)
         if (error) throw error
@@ -247,12 +248,18 @@ function ManualForm({ user, onDone }) {
     if (!form.nome.trim()) { toast.error(t('gameSearch.gameRequired')); return }
     setSaving(true)
     try {
+      const capaUrl = form.capa.trim() || null
+      if (capaUrl && !isSafeImageUrl(capaUrl)) {
+        toast.error('URL da capa inválida — use https://')
+        setSaving(false)
+        return
+      }
       const { data: gameRow, error: gameErr } = await supabase
         .from('games')
         .insert({
           nome: form.nome.trim(),
           slug: form.nome.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-          capa: form.capa.trim() || null,
+          capa: capaUrl,
           generos: form.genero ? [form.genero] : [],
           plataformas: form.console ? [form.console] : [],
         })
@@ -292,12 +299,12 @@ function ManualForm({ user, onDone }) {
         <div>
           <label className={labelCls}>{t('gameSearch.gameName')}</label>
           <input type="text" value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))}
-            placeholder={t('gameSearch.gameNamePlaceholder')} autoFocus className={inputCls} />
+            placeholder={t('gameSearch.gameNamePlaceholder')} autoFocus className={inputCls} maxLength={200} />
         </div>
         <div>
           <label className={labelCls}>{t('gameSearch.coverUrl')}</label>
           <input type="url" value={form.capa} onChange={e => setForm(f => ({ ...f, capa: e.target.value }))}
-            placeholder={t('gameSearch.coverUrlPlaceholder')} className={inputCls} />
+            placeholder={t('gameSearch.coverUrlPlaceholder')} className={inputCls} maxLength={1000} />
         </div>
       </div>
 
@@ -320,7 +327,7 @@ function ManualForm({ user, onDone }) {
 
       <CollectionFields form={form} setForm={setForm} />
 
-      {form.capa && (
+      {form.capa && isSafeImageUrl(form.capa) && (
         <div className="mb-4 flex items-center gap-3">
           <img src={form.capa} alt="preview" className="w-16 h-20 rounded-lg object-cover" onError={e => { e.target.style.display = 'none' }} />
           <span className="text-dash-muted text-xs">{t('gameSearch.coverPreview')}</span>

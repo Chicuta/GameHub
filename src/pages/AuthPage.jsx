@@ -28,6 +28,11 @@ export default function AuthPage() {
           setLoading(false)
           return
         }
+        if (password.length < 8) {
+          toast.error(t('auth.passwordMinLength', 'Senha deve ter pelo menos 8 caracteres'))
+          setLoading(false)
+          return
+        }
         await signUp(email, password, username)
         toast.success(t('auth.accountCreated'))
       }
@@ -75,11 +80,12 @@ export default function AuthPage() {
                 <input
                   type="text"
                   value={username}
-                  onChange={e => setUsername(e.target.value)}
+                  onChange={e => setUsername(e.target.value.replace(/[^a-zA-Z0-9_\-]/g, ''))}
                   className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-accent-cyan transition-colors"
                   placeholder={t('auth.usernamePlaceholder')}
                   required={!isLogin}
                   minLength={3}
+                  maxLength={30}
                 />
               </div>
             )}
@@ -103,7 +109,7 @@ export default function AuthPage() {
                 className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-accent-cyan transition-colors"
                 placeholder={t('auth.passwordPlaceholder')}
                 required
-                minLength={6}
+                minLength={8}
               />
             </div>
             <button

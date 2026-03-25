@@ -14,16 +14,6 @@ export function AuthProvider({ children }) {
       return
     }
 
-    // Handle OAuth PKCE code exchange on redirect
-    const params = new URLSearchParams(window.location.search)
-    const code = params.get('code')
-    if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(() => {
-        // Clean the URL after exchange
-        window.history.replaceState({}, '', window.location.pathname)
-      })
-    }
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       const newUser = session?.user ?? null
       setUser(prev => {
@@ -62,7 +52,7 @@ export function AuthProvider({ children }) {
   async function signInWithGoogle() {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/perfil` },
+      options: { redirectTo: `${window.location.origin}/auth` },
     })
     if (error) throw error
     return data

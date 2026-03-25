@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { getConsoleStyle } from '../utils/helpers'
+import { getConsoleStyle, escapeIlike } from '../utils/helpers'
 import { useGameDetail } from '../contexts/GameDetailContext'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -147,7 +147,7 @@ function AddGameToSaga({ sagaId, onAdded }) {
       const { data } = await supabase
         .from('games')
         .select('id, nome, capa, plataformas, data_lancamento, hltb_main')
-        .ilike('nome', `%${query}%`)
+        .ilike('nome', `%${escapeIlike(query)}%`)
         .order('igdb_rating', { ascending: false, nullsFirst: false })
         .limit(15)
       setResults(data || [])

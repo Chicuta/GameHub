@@ -141,19 +141,19 @@ CREATE POLICY "Profiles: editar próprio" ON profiles FOR UPDATE USING (auth.uid
 CREATE POLICY "Profiles: criar próprio" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
 
 -- user_games
-CREATE POLICY "User Games: leitura pública" ON user_games FOR SELECT USING (true);
+CREATE POLICY "User Games: leitura própria" ON user_games FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "User Games: inserir próprio" ON user_games FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "User Games: editar próprio" ON user_games FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "User Games: deletar próprio" ON user_games FOR DELETE USING (auth.uid() = user_id);
 
 -- user_saga_progress
-CREATE POLICY "Saga Progress: leitura pública" ON user_saga_progress FOR SELECT USING (true);
+CREATE POLICY "Saga Progress: leitura própria" ON user_saga_progress FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Saga Progress: inserir próprio" ON user_saga_progress FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Saga Progress: editar próprio" ON user_saga_progress FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Saga Progress: deletar próprio" ON user_saga_progress FOR DELETE USING (auth.uid() = user_id);
 
 -- user_sagas
-CREATE POLICY "User Sagas: leitura pública" ON user_sagas FOR SELECT USING (true);
+CREATE POLICY "User Sagas: leitura própria" ON user_sagas FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "User Sagas: inserir próprio" ON user_sagas FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "User Sagas: editar próprio" ON user_sagas FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "User Sagas: deletar próprio" ON user_sagas FOR DELETE USING (auth.uid() = user_id);

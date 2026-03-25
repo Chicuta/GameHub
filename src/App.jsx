@@ -134,6 +134,7 @@ export default function App() {
                 <Route path="/catalogo" element={<CatalogPage />} />
                 <Route path="/perfil" element={<Perfil />} />
                 <Route path="/auth" element={<AuthRoute />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </div>
             <GameDetailModal />

@@ -56,3 +56,19 @@ export function formatDateBR(dateStr) {
   if (!dateStr) return '—'
   return new Date(dateStr).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
 }
+
+/** Validates that a URL is a safe HTTP(S) image URL */
+export function isSafeImageUrl(url) {
+  if (!url || typeof url !== 'string') return false
+  try {
+    const parsed = new URL(url)
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:'
+  } catch {
+    return false
+  }
+}
+
+/** Escapes special characters for Supabase ilike/like queries */
+export function escapeIlike(str) {
+  return str.replace(/[%_\\]/g, c => '\\' + c)
+}
