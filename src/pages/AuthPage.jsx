@@ -1,10 +1,12 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import toast from 'react-hot-toast'
 import { useNavigate, Link } from 'react-router-dom'
 import { Gamepad2 } from 'lucide-react'
 
 export default function AuthPage() {
+  const { t } = useTranslation()
   const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -19,15 +21,15 @@ export default function AuthPage() {
     try {
       if (isLogin) {
         await signIn(email, password)
-        toast.success('Login realizado!')
+        toast.success(t('auth.loginSuccess'))
       } else {
         if (username.length < 3) {
-          toast.error('Username deve ter pelo menos 3 caracteres')
+          toast.error(t('auth.usernameMinLength'))
           setLoading(false)
           return
         }
         await signUp(email, password, username)
-        toast.success('Conta criada! Verifique seu email.')
+        toast.success(t('auth.accountCreated'))
       }
       navigate('/perfil')
     } catch (err) {
@@ -42,7 +44,7 @@ export default function AuthPage() {
       <div className="w-full max-w-md">
         <Link to="/" className="block text-center mb-8">
           <h1 className="font-heading font-black tracking-[4px] uppercase text-3xl bg-gradient-to-r from-white via-accent-cyan to-accent-purple bg-clip-text text-transparent flex items-center justify-center gap-2">
-            <Gamepad2 size={28} strokeWidth={2.5} className="text-accent-cyan" /> CENTRAL GAMER
+            <Gamepad2 size={28} strokeWidth={2.5} className="text-accent-cyan" /> {t('auth.title')}
           </h1>
         </Link>
 
@@ -54,7 +56,7 @@ export default function AuthPage() {
                 isLogin ? 'bg-accent-cyan/20 text-accent-cyan' : 'text-dash-muted hover:text-white'
               }`}
             >
-              Login
+              {t('auth.login')}
             </button>
             <button
               onClick={() => setIsLogin(false)}
@@ -62,44 +64,44 @@ export default function AuthPage() {
                 !isLogin ? 'bg-accent-purple/20 text-accent-purple' : 'text-dash-muted hover:text-white'
               }`}
             >
-              Registrar
+              {t('auth.register')}
             </button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-dash-muted mb-1">Username</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-dash-muted mb-1">{t('auth.username')}</label>
                 <input
                   type="text"
                   value={username}
                   onChange={e => setUsername(e.target.value)}
                   className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-accent-cyan transition-colors"
-                  placeholder="seu_username"
+                  placeholder={t('auth.usernamePlaceholder')}
                   required={!isLogin}
                   minLength={3}
                 />
               </div>
             )}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-dash-muted mb-1">Email</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-dash-muted mb-1">{t('auth.email')}</label>
               <input
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-accent-cyan transition-colors"
-                placeholder="email@exemplo.com"
+                placeholder={t('auth.emailPlaceholder')}
                 required
               />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-dash-muted mb-1">Senha</label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-dash-muted mb-1">{t('auth.password')}</label>
               <input
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-accent-cyan transition-colors"
-                placeholder="••••••••"
+                placeholder={t('auth.passwordPlaceholder')}
                 required
                 minLength={6}
               />
@@ -109,13 +111,13 @@ export default function AuthPage() {
               disabled={loading}
               className="w-full py-3 rounded-lg font-heading font-black uppercase tracking-wider text-sm transition-all disabled:opacity-50 cursor-pointer bg-gradient-to-r from-accent-cyan to-accent-purple text-dash-bg hover:shadow-[0_0_20px_rgba(0,245,255,0.3)]"
             >
-              {loading ? '...' : isLogin ? 'Entrar' : 'Criar Conta'}
+              {loading ? '...' : isLogin ? t('auth.submit') : t('auth.createAccount')}
             </button>
           </form>
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/10"></div></div>
-            <div className="relative flex justify-center text-xs"><span className="bg-dash-surface px-3 text-dash-muted uppercase tracking-wider">ou</span></div>
+            <div className="relative flex justify-center text-xs"><span className="bg-dash-surface px-3 text-dash-muted uppercase tracking-wider">{t('common.or')}</span></div>
           </div>
 
           <button
@@ -132,7 +134,7 @@ export default function AuthPage() {
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            Continuar com Google
+            {t('auth.continueGoogle')}
           </button>
         </div>
       </div>

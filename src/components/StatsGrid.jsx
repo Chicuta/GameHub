@@ -1,5 +1,6 @@
 import { formatTime, parseTime } from '../utils/helpers'
 import { CheckCircle2, Clock, Calendar, Flame } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const ico = { size: 14, strokeWidth: 2.5, className: 'inline-block align-[-0.125em] mr-1' }
 
@@ -14,6 +15,7 @@ function StatCard({ label, value, color, subtitle }) {
 }
 
 export default function StatsGrid({ zerados, jogando, abandonados = [], backlog = [], pausados = [] }) {
+  const { t } = useTranslation()
   const allGames = [...zerados, ...jogando, ...abandonados, ...backlog, ...pausados]
   const totalH = allGames.reduce((s, g) => s + parseTime(g.tempo), 0)
   const currentYear = new Date().getFullYear()
@@ -28,10 +30,10 @@ export default function StatsGrid({ zerados, jogando, abandonados = [], backlog 
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-6">
-      <StatCard label={<><CheckCircle2 {...ico} /> Zerados</>} value={zerados.length} color="var(--color-accent-cyan)" subtitle={`média ${mediaGlobal} ★`} />
-      <StatCard label={<><Clock {...ico} /> Tempo Total</>} value={formatTime(totalH)} color="var(--color-accent-success)" subtitle={totalH2026 > 0 ? `${formatTime(totalH2026)} em ${currentYear}` : undefined} />
-      <StatCard label={<><Calendar {...ico} /> {currentYear}</>} value={z2026.length} color="var(--color-accent-gold)" subtitle={`${ritmo} jogos/mês`} />
-      <StatCard label={<><Flame {...ico} /> Jogando</>} value={jogando.length} color="var(--color-accent-purple)" subtitle="em andamento" />
+      <StatCard label={<><CheckCircle2 {...ico} /> {t('stats.completed')}</>} value={zerados.length} color="var(--color-accent-cyan)" subtitle={t('stats.avgRating', { avg: mediaGlobal })} />
+      <StatCard label={<><Clock {...ico} /> {t('stats.totalTime')}</>} value={formatTime(totalH)} color="var(--color-accent-success)" subtitle={totalH2026 > 0 ? t('stats.timeInYear', { time: formatTime(totalH2026), year: currentYear }) : undefined} />
+      <StatCard label={<><Calendar {...ico} /> {currentYear}</>} value={z2026.length} color="var(--color-accent-gold)" subtitle={`${ritmo} ${t('stats.gamesPerMonth')}`} />
+      <StatCard label={<><Flame {...ico} /> {t('stats.playing')}</>} value={jogando.length} color="var(--color-accent-purple)" subtitle={t('stats.inProgress')} />
     </div>
   )
 }

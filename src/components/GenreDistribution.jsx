@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import Accordion from './Accordion'
 import { Dna } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const GENRE_COLORS = {
   'ação': '#ff0055',
@@ -29,6 +30,7 @@ function getGenreColor(genre) {
 }
 
 export default function GenreDistribution({ zerados, jogando, abandonados, backlog, pausados }) {
+  const { t } = useTranslation()
   const rows = useMemo(() => {
     const all = [...zerados, ...jogando, ...abandonados, ...backlog, ...pausados]
     const stats = {}
@@ -59,16 +61,17 @@ export default function GenreDistribution({ zerados, jogando, abandonados, backl
   if (rows.length === 0) return null
 
   return (
-    <Accordion title="DISTRIBUIÇÃO POR GÊNERO" color="#bc13fe" icon={<Dna size={18} strokeWidth={2.5} />}>
+    <Accordion title={t('genreDistribution.title')} color="#bc13fe" icon={<Dna size={18} strokeWidth={2.5} />}>
       <div className="pt-3">
         {rows.map(r => {
           const w = Math.round((r.total / maxTotal) * 100)
           const col = getGenreColor(r.name)
           const pctZerado = r.total > 0 ? Math.round((r.zerados / r.total) * 100) : 0
+          const displayName = r.name === 'Sem gênero' ? t('genreDistribution.noGenre') : t('genres.' + r.name, r.name)
           return (
             <div key={r.name} className="flex items-center gap-2 sm:gap-2.5 mb-2.5">
-              <div className="text-[0.65em] sm:text-[0.72em] font-bold text-dash-text w-[80px] sm:w-[110px] shrink-0 whitespace-nowrap overflow-hidden text-ellipsis" title={r.name}>
-                {r.name}
+              <div className="text-[0.65em] sm:text-[0.72em] font-bold text-dash-text w-[80px] sm:w-[110px] shrink-0 whitespace-nowrap overflow-hidden text-ellipsis" title={displayName}>
+                {displayName}
               </div>
               <div className="flex-1 h-2 bg-black/50 rounded overflow-hidden relative">
                 <div className="flex w-full h-full">

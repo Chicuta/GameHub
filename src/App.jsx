@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { UserGamesProvider, useUserGames } from './contexts/UserGamesContext'
 import { GameDetailProvider } from './contexts/GameDetailContext'
@@ -27,24 +28,27 @@ import BacklogHealth from './components/BacklogHealth'
 import AuthPage from './pages/AuthPage'
 import CatalogPage from './pages/CatalogPage'
 import { Gamepad2, User, BookOpen } from 'lucide-react'
+import LanguageSwitcher from './components/LanguageSwitcher'
 
 /* ── Navbar ─────────────────────────────────────── */
 function Navbar() {
   const { user, profile, signOut } = useAuth()
+  const { t } = useTranslation()
   return (
     <nav className="max-w-5xl mx-auto flex items-center justify-between py-3 px-1 mb-2">
       <div className="flex items-center gap-4">
         <Link to="/" className="font-heading font-black text-accent-cyan tracking-wider text-lg flex items-center gap-1.5">
-          <Gamepad2 size={20} strokeWidth={2.5} /> CENTRAL GAMER
+          <Gamepad2 size={20} strokeWidth={2.5} /> {t('header.title')}
         </Link>
         <Link
           to="/catalogo"
           className="flex items-center gap-1 text-sm text-dash-muted hover:text-accent-cyan transition-colors font-bold uppercase tracking-wider"
         >
-          <BookOpen size={16} strokeWidth={2.5} /> Catálogo
+          <BookOpen size={16} strokeWidth={2.5} /> {t('header.catalog')}
         </Link>
       </div>
       <div className="flex items-center gap-3">
+        <LanguageSwitcher />
         {user ? (
           <>
             <Link
@@ -58,7 +62,7 @@ function Navbar() {
               onClick={signOut}
               className="text-xs border border-white/10 rounded-lg px-3 py-1.5 text-dash-muted hover:text-white hover:border-white/20 transition-colors cursor-pointer"
             >
-              Sair
+              {t('header.logout')}
             </button>
           </>
         ) : (
@@ -66,7 +70,7 @@ function Navbar() {
             to="/auth"
             className="text-sm border border-accent-cyan/30 text-accent-cyan rounded-lg px-4 py-1.5 hover:bg-accent-cyan/10 transition-colors"
           >
-            Entrar
+            {t('header.login')}
           </Link>
         )}
       </div>

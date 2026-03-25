@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { parseTime, formatTime } from '../utils/helpers'
 import Accordion from './Accordion'
 import { HeartPulse, TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2, Skull } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 function HealthGauge({ score, label, color }) {
   return (
@@ -33,6 +34,7 @@ function MetricRow({ icon, label, value, sub, color }) {
 }
 
 export default function BacklogHealth({ zerados, jogando, backlog, pausados, abandonados }) {
+  const { t } = useTranslation()
   const stats = useMemo(() => {
     const currentYear = new Date().getFullYear()
     const currentMonth = new Date().getMonth() + 1
@@ -65,9 +67,9 @@ export default function BacklogHealth({ zerados, jogando, backlog, pausados, aba
     else score = 15
 
     let healthLabel, healthColor
-    if (score >= 80) { healthLabel = 'Saudável'; healthColor = '#00ff9f' }
-    else if (score >= 50) { healthLabel = 'Atenção'; healthColor = '#ffcc00' }
-    else { healthLabel = 'Crítico'; healthColor = '#ff0055' }
+    if (score >= 80) { healthLabel = 'healthy'; healthColor = '#00ff9f' }
+    else if (score >= 50) { healthLabel = 'warning'; healthColor = '#ffcc00' }
+    else { healthLabel = 'critical'; healthColor = '#ff0055' }
 
     return {
       pendentes, total, ritmoMensal, mesesParaZerar, anosParaZerar,
@@ -80,42 +82,42 @@ export default function BacklogHealth({ zerados, jogando, backlog, pausados, aba
   const s = stats
 
   return (
-    <Accordion title="SAÚDE DO BACKLOG" color={s.healthColor} icon={<HeartPulse size={18} strokeWidth={2.5} />}>
+    <Accordion title={t('backlogHealth.title')} color={s.healthColor} icon={<HeartPulse size={18} strokeWidth={2.5} />}>
       <div className="pt-4">
         {/* gauge */}
         <div className="flex justify-center mb-5">
-          <HealthGauge score={s.score} label={s.healthLabel} color={s.healthColor} />
+          <HealthGauge score={s.score} label={t(`backlogHealth.${s.healthLabel}`)} color={s.healthColor} />
         </div>
 
         {/* metrics */}
         <div className="space-y-0">
           <MetricRow
             icon={<AlertTriangle size={16} strokeWidth={2.5} />}
-            label="Pendentes"
+            label={t('backlogHealth.pending')}
             value={s.pendentes}
-            sub={`de ${s.total} total (${s.taxaConclusao}% concluído)`}
+            sub={t('backlogHealth.ofTotal', { total: s.total, pct: s.taxaConclusao })}
             color="#ffcc00"
           />
           <MetricRow
             icon={s.ritmoMensal >= 3 ? <TrendingUp size={16} strokeWidth={2.5} /> : s.ritmoMensal >= 1 ? <Minus size={16} strokeWidth={2.5} /> : <TrendingDown size={16} strokeWidth={2.5} />}
-            label="Ritmo Atual"
-            value={`${s.ritmoMensal.toFixed(1)}/mês`}
-            sub={`${s.zeradosAno} zerados em ${new Date().getFullYear()}`}
+            label={t('backlogHealth.currentPace')}
+            value={t('backlogHealth.perMonth', { rate: s.ritmoMensal.toFixed(1) })}
+            sub={t('backlogHealth.completedThisYear', { count: s.zeradosAno, year: new Date().getFullYear() })}
             color={s.ritmoMensal >= 3 ? '#00ff9f' : s.ritmoMensal >= 1 ? '#ffcc00' : '#ff0055'}
           />
           <MetricRow
             icon={<Skull size={16} strokeWidth={2.5} />}
-            label="Tempo p/ Zerar Tudo"
+            label={t('backlogHealth.timeToComplete')}
             value={s.mesesParaZerar === Infinity ? '∞' : s.anosParaZerar < 1 ? `${s.mesesParaZerar}m` : `${s.anosParaZerar.toFixed(1)}a`}
-            sub={s.mesesParaZerar === Infinity ? 'sem ritmo de conclusão' : `~${s.mesesParaZerar} meses no ritmo atual`}
+            sub={s.mesesParaZerar === Infinity ? t('backlogHealth.noCompletionPace') : t('backlogHealth.monthsAtPace', { months: s.mesesParaZerar })}
             color={s.anosParaZerar <= 2 ? '#00ff9f' : s.anosParaZerar <= 5 ? '#ffcc00' : '#ff0055'}
           />
           {s.hltbPendente > 0 && (
             <MetricRow
               icon={<CheckCircle2 size={16} strokeWidth={2.5} />}
-              label="HLTB Pendente"
+              label={t('backlogHealth.pendingHltb')}
               value={formatTime(s.hltbPendente)}
-              sub="tempo estimado para jogar tudo"
+              sub={t('backlogHealth.estimatedTime')}
               color="#94a3b8"
             />
           )}

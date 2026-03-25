@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchTrendingGames } from '../lib/gamesApi'
 import { TrendingUp, Star } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 function getRating(game) {
   if (game.metacritic) return { value: game.metacritic, max: 100 }
@@ -54,6 +55,7 @@ function GameCard({ game }) {
 }
 
 export default function TrendingGames() {
+  const { t } = useTranslation()
   const [games, setGames] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -73,8 +75,8 @@ export default function TrendingGames() {
           <TrendingUp size={20} className="text-accent-cyan" strokeWidth={2.5} />
         </div>
         <div>
-          <h2 className="font-heading font-black uppercase tracking-wider text-lg text-white">Em Alta</h2>
-          <p className="text-dash-muted text-xs">Jogos mais bem avaliados dos últimos meses</p>
+          <h2 className="font-heading font-black uppercase tracking-wider text-lg text-white">{t('trending.title')}</h2>
+          <p className="text-dash-muted text-xs">{t('trending.subtitle')}</p>
         </div>
       </div>
 

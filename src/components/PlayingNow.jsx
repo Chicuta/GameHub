@@ -4,9 +4,11 @@ import ConsoleBadge from './ConsoleBadge'
 import SectionTitle from './SectionTitle'
 import HltbBar from './HltbBar'
 import { Flame, Calendar } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 function EtaBadge({ game }) {
-  const t = parseTime(game.tempo)
+  const { t } = useTranslation()
+  const played = parseTime(game.tempo)
   const h = parseFloat(game.hltb) || 0
   const hoje = todayStr()
   const dataInicio = game.data_inicio
@@ -20,25 +22,25 @@ function EtaBadge({ game }) {
 
     if (dataFim) {
       const diasFaltando = daysBetween(hoje, dataFim)
-      if (diasFaltando < 0) { text = 'prazo vencido'; cls = 'eta-unknown' }
-      else if (diasFaltando === 0) { text = 'hoje!'; cls = 'eta-soon' }
+      if (diasFaltando < 0) { text = t('playingNow.overdue'); cls = 'eta-unknown' }
+      else if (diasFaltando === 0) { text = t('playingNow.today'); cls = 'eta-soon' }
       else if (diasFaltando <= 7) { text = `${diasFaltando}d`; cls = 'eta-soon' }
       else if (diasFaltando <= 30) { text = `${diasFaltando}d`; cls = 'eta-normal' }
       else { text = `${diasFaltando}d`; cls = 'eta-far' }
-    } else if (h > 0 && t > 0) {
-      const hPorDia = t / diasDecorrido
-      const hRestantes = Math.max(h - t, 0)
-      if (hRestantes === 0) { text = 'Quase lá!'; cls = 'eta-soon' }
+    } else if (h > 0 && played > 0) {
+      const hPorDia = played / diasDecorrido
+      const hRestantes = Math.max(h - played, 0)
+      if (hRestantes === 0) { text = t('playingNow.almostThere'); cls = 'eta-soon' }
       else {
         const diasRestantes = Math.ceil(hRestantes / hPorDia)
-        if (diasRestantes <= 7) { text = `~${diasRestantes}d`; cls = 'eta-soon' }
-        else if (diasRestantes <= 30) { text = `~${diasRestantes}d`; cls = 'eta-normal' }
-        else { text = `~${diasRestantes}d`; cls = 'eta-far' }
+        if (diasRestantes <= 7) { text = t('playingNow.daysLeft', { days: diasRestantes }); cls = 'eta-soon' }
+        else if (diasRestantes <= 30) { text = t('playingNow.daysLeft', { days: diasRestantes }); cls = 'eta-normal' }
+        else { text = t('playingNow.daysLeft', { days: diasRestantes }); cls = 'eta-far' }
       }
-    } else if (h > 0) { text = 'sem ritmo'; cls = 'eta-unknown' }
-    else { text = 'sem HLTB'; cls = 'eta-unknown' }
+    } else if (h > 0) { text = t('playingNow.noRhythm'); cls = 'eta-unknown' }
+    else { text = t('playingNow.noHltb'); cls = 'eta-unknown' }
   } else {
-    text = h > 0 ? 'sem data' : 'sem HLTB'
+    text = h > 0 ? t('playingNow.noDate') : t('playingNow.noHltb')
   }
 
   const styles = {
@@ -56,10 +58,11 @@ function EtaBadge({ game }) {
 }
 
 function GameCard({ game }) {
+  const { t } = useTranslation()
   const { openGame } = useGameDetail()
-  const t = parseTime(game.tempo)
+  const played = parseTime(game.tempo)
   const h = parseFloat(game.hltb) || 0
-  const p = h > 0 ? Math.min(Math.round((t / h) * 100), 100) : 0
+  const p = h > 0 ? Math.min(Math.round((played / h) * 100), 100) : 0
   const s = getConsoleStyle(game.console)
   const onFire = p >= 70
 
@@ -82,7 +85,7 @@ function GameCard({ game }) {
             </div>
             <ConsoleBadge console={game.console} />
             {diasDecorrido && (
-              <div className="text-[0.58em] text-dash-muted mt-0.5 font-bold flex items-center gap-0.5"><Calendar size={10} strokeWidth={2.5} /> há {diasDecorrido}d</div>
+              <div className="text-[0.58em] text-dash-muted mt-0.5 font-bold flex items-center gap-0.5"><Calendar size={10} strokeWidth={2.5} /> {t('playingNow.daysAgo', { days: diasDecorrido })}</div>
             )}
           </div>
           <EtaBadge game={game} />
@@ -94,11 +97,12 @@ function GameCard({ game }) {
 }
 
 export default function PlayingNow({ jogando }) {
+  const { t } = useTranslation()
   const sorted = [...jogando].sort((a, b) => parseTime(b.tempo) - parseTime(a.tempo))
 
   return (
     <div className="mb-8">
-      <SectionTitle icon={<Flame size={22} strokeWidth={2.5} className="text-orange-500" />}>JOGANDO AGORA</SectionTitle>
+      <SectionTitle icon={<Flame size={22} strokeWidth={2.5} className="text-orange-500" />}>{t('playingNow.title')}</SectionTitle>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {sorted.map(g => <GameCard key={g.nome} game={g} />)}
       </div>

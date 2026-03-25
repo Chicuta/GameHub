@@ -1,16 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { I } from './Icons'
 import toast from 'react-hot-toast'
 
 const STATUS_OPTIONS = [
-  { value: 'jogando', label: '\u25B6 Jogando' },
-  { value: 'zerado', label: '\u2713 Zerado' },
-  { value: 'jogado', label: '\uD83C\uDFC6 Jogado' },
-  { value: 'pausado', label: '\u23F8 Pausado' },
-  { value: 'backlog', label: '\u25A0 Backlog' },
-  { value: 'abandonado', label: '\u2620 Abandonado' },
+  { value: 'jogando', labelKey: 'status.playingIcon' },
+  { value: 'zerado', labelKey: 'status.completedIcon' },
+  { value: 'jogado', labelKey: 'status.playedIcon' },
+  { value: 'pausado', labelKey: 'status.pausedIcon' },
+  { value: 'backlog', labelKey: 'status.backlogIcon' },
+  { value: 'abandonado', labelKey: 'status.abandonedIcon' },
 ]
 
 const PLATFORM_LIST = [
@@ -40,6 +41,7 @@ export default function GameSearch({ onGameAdded }) {
   const [open, setOpen] = useState(false)
   const [tab, setTab] = useState('search')
   const { user } = useAuth()
+  const { t } = useTranslation()
 
   function reset() { setOpen(false) }
 
@@ -49,7 +51,7 @@ export default function GameSearch({ onGameAdded }) {
         onClick={() => setOpen(true)}
         className="mb-5 w-full py-3 rounded-xl border-2 border-dashed border-accent-cyan/30 text-accent-cyan font-heading font-black uppercase tracking-wider text-sm hover:bg-accent-cyan/5 hover:border-accent-cyan/50 transition-all cursor-pointer"
       >
-        + ADICIONAR JOGO
+        {t('gameSearch.addGame')}
       </button>
     )
   }
@@ -62,13 +64,13 @@ export default function GameSearch({ onGameAdded }) {
             onClick={() => setTab('search')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${tab === 'search' ? 'bg-accent-cyan/15 text-accent-cyan' : 'text-dash-muted hover:text-white'}`}
           >
-            <I.search /> Buscar
+            <I.search /> {t('gameSearch.tabSearch')}
           </button>
           <button
             onClick={() => setTab('manual')}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${tab === 'manual' ? 'bg-accent-cyan/15 text-accent-cyan' : 'text-dash-muted hover:text-white'}`}
           >
-            <I.pen /> Manual
+            <I.pen /> {t('gameSearch.tabManual')}
           </button>
         </div>
         <button onClick={reset} className="text-dash-muted hover:text-white text-xl px-2 cursor-pointer">✕</button>
@@ -85,6 +87,7 @@ export default function GameSearch({ onGameAdded }) {
 
 /* ── Busca Local (Supabase) ─────────────────────── */
 function LocalSearch({ user, onDone }) {
+  const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [searching, setSearching] = useState(false)
@@ -146,7 +149,7 @@ function LocalSearch({ user, onDone }) {
       }, { onConflict: 'user_id,game_id' })
       if (ugErr) throw ugErr
 
-      toast.success(`${selected.nome} adicionado!`)
+      toast.success(t('gameSearch.addedToast', { name: selected.nome }))
       onDone()
     } catch (err) {
       toast.error(err.message || 'Erro ao salvar')
@@ -160,14 +163,14 @@ function LocalSearch({ user, onDone }) {
           type="text"
           value={query}
           onChange={e => setQuery(e.target.value)}
-          placeholder="Buscar jogo no banco... (ex: Elden Ring)"
+          placeholder={t('gameSearch.searchPlaceholder')}
           autoFocus
           className={`${inputCls} mb-3`}
         />
-        {searching && <div className="text-center text-dash-muted text-sm py-4">Buscando...</div>}
+        {searching && <div className="text-center text-dash-muted text-sm py-4">{t('common.searching')}</div>}
         {!searching && query.length >= 2 && results.length === 0 && (
           <div className="text-center text-dash-muted text-sm py-4">
-            Nenhum resultado. Tente a aba <button type="button" className="text-accent-cyan hover:underline cursor-pointer" onClick={() => {}}><I.pen /> Manual</button> para adicionar.
+            {t('gameSearch.noResults')}
           </div>
         )}
         <div className="max-h-[400px] overflow-y-auto space-y-1.5">
@@ -220,7 +223,7 @@ function LocalSearch({ user, onDone }) {
           {selected.descricao && (
             <p className="text-dash-muted text-xs mt-2 line-clamp-3">{selected.descricao}</p>
           )}
-          <button type="button" onClick={() => setSelected(null)} className="text-accent-cyan text-xs mt-2 hover:underline cursor-pointer">← Voltar à busca</button>
+          <button type="button" onClick={() => setSelected(null)} className="text-accent-cyan text-xs mt-2 hover:underline cursor-pointer">{t('gameSearch.backToSearch')}</button>
         </div>
       </div>
       <CollectionFields form={form} setForm={setForm} platforms={selected.plataformas} />
@@ -231,6 +234,7 @@ function LocalSearch({ user, onDone }) {
 
 /* ── Formulário Manual ──────────────────────────── */
 function ManualForm({ user, onDone }) {
+  const { t } = useTranslation()
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
     nome: '', console: '', genero: '', capa: '',
@@ -240,7 +244,7 @@ function ManualForm({ user, onDone }) {
   async function handleAdd(e) {
     e.preventDefault()
     if (!supabase || !user) return
-    if (!form.nome.trim()) { toast.error('Nome do jogo é obrigatório'); return }
+    if (!form.nome.trim()) { toast.error(t('gameSearch.gameRequired')); return }
     setSaving(true)
     try {
       const { data: gameRow, error: gameErr } = await supabase
@@ -275,7 +279,7 @@ function ManualForm({ user, onDone }) {
       })
       if (ugErr) throw ugErr
 
-      toast.success(`${form.nome} adicionado!`)
+      toast.success(t('gameSearch.addedToast', { name: form.nome }))
       onDone()
     } catch (err) {
       toast.error(err.message || 'Erro ao salvar')
@@ -286,30 +290,30 @@ function ManualForm({ user, onDone }) {
     <form onSubmit={handleAdd}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
         <div>
-          <label className={labelCls}>Nome do Jogo *</label>
+          <label className={labelCls}>{t('gameSearch.gameName')}</label>
           <input type="text" value={form.nome} onChange={e => setForm(f => ({ ...f, nome: e.target.value }))}
-            placeholder="Ex: Elden Ring" autoFocus className={inputCls} />
+            placeholder={t('gameSearch.gameNamePlaceholder')} autoFocus className={inputCls} />
         </div>
         <div>
-          <label className={labelCls}>URL da Capa (opcional)</label>
+          <label className={labelCls}>{t('gameSearch.coverUrl')}</label>
           <input type="url" value={form.capa} onChange={e => setForm(f => ({ ...f, capa: e.target.value }))}
-            placeholder="https://..." className={inputCls} />
+            placeholder={t('gameSearch.coverUrlPlaceholder')} className={inputCls} />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-3">
         <div>
-          <label className={labelCls}>Plataforma</label>
+          <label className={labelCls}>{t('gameSearch.platform')}</label>
           <select value={form.console} onChange={e => setForm(f => ({ ...f, console: e.target.value }))} className={inputCls}>
-            <option value="">Selecione...</option>
+            <option value="">{t('common.select')}</option>
             {PLATFORM_LIST.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
         </div>
         <div>
-          <label className={labelCls}>Gênero</label>
+          <label className={labelCls}>{t('gameSearch.genre')}</label>
           <select value={form.genero} onChange={e => setForm(f => ({ ...f, genero: e.target.value }))} className={inputCls}>
-            <option value="">Selecione...</option>
-            {GENRE_LIST.map(g => <option key={g} value={g}>{g}</option>)}
+            <option value="">{t('common.select')}</option>
+            {GENRE_LIST.map(g => <option key={g} value={g}>{t('genres.' + g)}</option>)}
           </select>
         </div>
       </div>
@@ -319,7 +323,7 @@ function ManualForm({ user, onDone }) {
       {form.capa && (
         <div className="mb-4 flex items-center gap-3">
           <img src={form.capa} alt="preview" className="w-16 h-20 rounded-lg object-cover" onError={e => { e.target.style.display = 'none' }} />
-          <span className="text-dash-muted text-xs">Preview da capa</span>
+          <span className="text-dash-muted text-xs">{t('gameSearch.coverPreview')}</span>
         </div>
       )}
 
@@ -330,38 +334,39 @@ function ManualForm({ user, onDone }) {
 
 /* ── Campos compartilhados ──────────────────────── */
 function CollectionFields({ form, setForm, platforms }) {
+  const { t } = useTranslation()
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
       <div>
-        <label className={labelCls}>Status</label>
+        <label className={labelCls}>{t('gameSearch.status')}</label>
         <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className={inputCls}>
-          {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{t(o.labelKey)}</option>)}
         </select>
       </div>
       {platforms && (
         <div>
-          <label className={labelCls}>Plataforma</label>
+          <label className={labelCls}>{t('gameSearch.platform')}</label>
           <select value={form.console} onChange={e => setForm(f => ({ ...f, console: e.target.value }))} className={inputCls}>
-            <option value="">Selecione...</option>
+            <option value="">{t('common.select')}</option>
             {platforms.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
         </div>
       )}
       <div>
-        <label className={labelCls}>Nota (1-10)</label>
+        <label className={labelCls}>{t('gameSearch.rating')}</label>
         <input type="number" min="1" max="10" value={form.nota} onChange={e => setForm(f => ({ ...f, nota: e.target.value }))} placeholder="—" className={inputCls} />
       </div>
       <div>
-        <label className={labelCls}>Horas Jogadas</label>
+        <label className={labelCls}>{t('gameSearch.hoursPlayed')}</label>
         <input type="number" min="0" step="0.5" value={form.tempo} onChange={e => setForm(f => ({ ...f, tempo: e.target.value }))} placeholder="0" className={inputCls} />
       </div>
       <div>
-        <label className={labelCls}>HLTB (horas)</label>
+        <label className={labelCls}>{t('gameSearch.hltbHours')}</label>
         <input type="number" min="0" step="0.5" value={form.hltb} onChange={e => setForm(f => ({ ...f, hltb: e.target.value }))} placeholder="Estimado" className={inputCls} />
       </div>
       {form.status === 'jogado' && (
         <div>
-          <label className={labelCls}>Ano que jogou</label>
+          <label className={labelCls}>{t('gameSearch.yearPlayed')}</label>
           <input type="number" min="1970" max={new Date().getFullYear()} value={form.anoJogado} onChange={e => setForm(f => ({ ...f, anoJogado: e.target.value }))} placeholder={String(new Date().getFullYear())} className={inputCls} />
         </div>
       )}
@@ -370,11 +375,12 @@ function CollectionFields({ form, setForm, platforms }) {
 }
 
 function ActionButtons({ saving, onCancel }) {
+  const { t } = useTranslation()
   return (
     <div className="flex gap-2">
       <button type="submit" disabled={saving}
         className="flex-1 py-2.5 rounded-lg font-heading font-black uppercase tracking-wider text-sm bg-gradient-to-r from-accent-cyan to-accent-purple text-dash-bg hover:shadow-[0_0_20px_rgba(0,245,255,0.3)] transition-all disabled:opacity-50 cursor-pointer">
-        {saving ? 'Salvando...' : '+ Adicionar à Coleção'}
+        {saving ? 'Salvando...' : t('gameSearch.addToCollection')}
       </button>
       <button type="button" onClick={onCancel}
         className="px-4 py-2.5 rounded-lg border border-white/10 text-dash-muted text-sm hover:bg-white/5 transition-colors cursor-pointer">

@@ -5,6 +5,7 @@ import ConsoleBadge from './ConsoleBadge'
 import SectionTitle from './SectionTitle'
 import HltbBar from './HltbBar'
 import { Pause, ChevronDown } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 function PausedCard({ game }) {
   const { openGame } = useGameDetail()
@@ -34,6 +35,7 @@ function PausedCard({ game }) {
 }
 
 export default function PausedGames({ pausados }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(true)
   if (!pausados || pausados.length === 0) return null
 
@@ -42,7 +44,7 @@ export default function PausedGames({ pausados }) {
   return (
     <div className="mb-8">
       <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between cursor-pointer mb-4 group">
-        <SectionTitle icon={<Pause size={22} strokeWidth={2.5} className="text-accent-purple" />}>PAUSADOS <span className="text-dash-muted text-sm font-normal ml-1">({pausados.length})</span></SectionTitle>
+        <SectionTitle icon={<Pause size={22} strokeWidth={2.5} className="text-accent-purple" />}>{t('paused.title')} <span className="text-dash-muted text-sm font-normal ml-1">({pausados.length})</span></SectionTitle>
         <ChevronDown size={20} className={`text-dash-muted transition-transform duration-300 group-hover:text-accent-purple ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (

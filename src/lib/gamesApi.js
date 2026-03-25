@@ -42,3 +42,48 @@ export async function fetchGotyByYear(years = 3) {
 
   return results
 }
+
+/* ── Game Sessions ──────────────────────────────── */
+
+export async function fetchSessions(userGameId) {
+  if (!supabase) return []
+  const { data, error } = await supabase
+    .from('game_sessions')
+    .select('*')
+    .eq('user_game_id', userGameId)
+    .order('session_date', { ascending: false })
+    .order('start_time', { ascending: false, nullsFirst: true })
+  if (error) { console.error('fetchSessions:', error); return [] }
+  return data || []
+}
+
+export async function createSession(session) {
+  if (!supabase) return { error: 'No supabase' }
+  const { data, error } = await supabase
+    .from('game_sessions')
+    .insert(session)
+    .select()
+    .single()
+  if (error) console.error('createSession:', error)
+  return { data, error }
+}
+
+export async function updateSession(sessionId, fields) {
+  if (!supabase) return { error: 'No supabase' }
+  const { error } = await supabase
+    .from('game_sessions')
+    .update(fields)
+    .eq('id', sessionId)
+  if (error) console.error('updateSession:', error)
+  return { error }
+}
+
+export async function deleteSession(sessionId) {
+  if (!supabase) return { error: 'No supabase' }
+  const { error } = await supabase
+    .from('game_sessions')
+    .delete()
+    .eq('id', sessionId)
+  if (error) console.error('deleteSession:', error)
+  return { error }
+}

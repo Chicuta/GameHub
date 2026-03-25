@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useUserGames } from '../contexts/UserGamesContext'
@@ -41,6 +42,7 @@ function getGameRating(game) {
 }
 
 export default function CatalogPage() {
+  const { t } = useTranslation()
   const [allGames, setAllGames] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -113,7 +115,7 @@ export default function CatalogPage() {
 
     const map = new Map()
     filtered.forEach(game => {
-      const genres = game.generos?.length > 0 ? game.generos : ['Sem Gênero']
+      const genres = game.generos?.length > 0 ? game.generos : [t('common.noGenre', 'Sem Gênero')]
       genres.forEach(genre => {
         if (!map.has(genre)) map.set(genre, [])
         map.get(genre).push(game)
@@ -144,7 +146,7 @@ export default function CatalogPage() {
       setRawgResults(results)
     } catch (err) {
       console.error('RAWG search error:', err)
-      toast.error('Erro ao buscar na RAWG')
+      toast.error(t('catalog.importError'))
       setRawgResults([])
     } finally {
       setRawgLoading(false)
@@ -177,14 +179,14 @@ export default function CatalogPage() {
 
     if (error) {
       console.error('Import RAWG game error:', error)
-      toast.error('Erro ao importar jogo')
+      toast.error(t('catalog.importError'))
       return null
     }
 
     // Add to local state
     setAllGames(prev => [...prev, data])
     setRawgResults(prev => prev.filter(g => g.id !== rawgGame.id))
-    toast.success(`${rawgGame.name} importado ao catálogo!`)
+    toast.success(t('catalog.importedToast', { name: rawgGame.name }))
     return data
   }
 
@@ -198,7 +200,7 @@ export default function CatalogPage() {
     <div className="max-w-5xl mx-auto">
       <div className="bg-dash-bg/80 backdrop-blur-xl rounded-2xl border border-dash-border p-5">
         <SectionTitle icon={<BookOpen size={22} strokeWidth={2.5} className="text-accent-cyan" />}>
-          CATÁLOGO ({allGames.length})
+          {t('catalog.title', { count: allGames.length })}
         </SectionTitle>
 
         {/* Toolbar */}
@@ -209,7 +211,7 @@ export default function CatalogPage() {
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Buscar no catálogo..."
+              placeholder={t('catalog.searchPlaceholder')}
               className="w-full bg-black/40 border border-white/10 rounded-lg pl-8 pr-3 py-1.5 text-white text-sm focus:outline-none focus:border-accent-cyan transition-colors"
             />
           </div>
@@ -223,7 +225,7 @@ export default function CatalogPage() {
             }`}
           >
             <SlidersHorizontal size={14} strokeWidth={2.5} />
-            Filtros
+            {t('common.filters')}
             {genreFilter && (
               <span className="bg-accent-cyan text-dash-bg text-[0.6em] font-black rounded-full w-4 h-4 flex items-center justify-center">1</span>
             )}
@@ -237,7 +239,7 @@ export default function CatalogPage() {
               className="flex items-center gap-1 text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg border border-accent-purple/30 text-accent-purple hover:bg-accent-purple/10 transition-colors cursor-pointer disabled:opacity-50"
             >
               {rawgLoading ? <Loader2 size={14} className="animate-spin" /> : <Globe size={14} strokeWidth={2.5} />}
-              Buscar na RAWG
+              {t('catalog.searchRawg')}
             </button>
           )}
         </div>
@@ -246,10 +248,10 @@ export default function CatalogPage() {
         {showFilters && (
           <div className="flex flex-wrap gap-2 mb-4 p-3 bg-black/20 rounded-xl border border-white/5">
             <div>
-              <label className="block text-[0.6em] font-bold uppercase text-dash-muted mb-1">Gênero</label>
+              <label className="block text-[0.6em] font-bold uppercase text-dash-muted mb-1">{t('catalog.genre')}</label>
               <select value={genreFilter} onChange={e => setGenreFilter(e.target.value)} className={selectCls}>
-                <option value="">Todos</option>
-                {allGenres.map(g => <option key={g} value={g}>{g}</option>)}
+                <option value="">{t('common.all')}</option>
+                {allGenres.map(g => <option key={g} value={g}>{t(`genres.${g}`, g)}</option>)}
               </select>
             </div>
             {genreFilter && (
@@ -257,7 +259,7 @@ export default function CatalogPage() {
                 onClick={() => setGenreFilter('')}
                 className="self-end text-accent-cyan text-xs hover:underline cursor-pointer mb-1"
               >
-                Limpar filtro
+                {t('catalog.clearFilter')}
               </button>
             )}
           </div>
@@ -271,7 +273,7 @@ export default function CatalogPage() {
         ) : filtered.length === 0 ? (
           <div className="text-center py-16 text-dash-muted">
             <BookOpen size={40} className="mx-auto mb-3 opacity-40" />
-            <p className="text-sm">Nenhum jogo encontrado.</p>
+            <p className="text-sm">{t('catalog.noGames')}</p>
           </div>
         ) : (
           <div className="space-y-8">
@@ -284,7 +286,7 @@ export default function CatalogPage() {
                     className="font-heading font-black text-white uppercase tracking-wider text-sm mb-3 flex items-center gap-2 cursor-pointer hover:text-accent-cyan transition-colors group/genre"
                   >
                     <span className={`transition-transform duration-200 ${collapsed ? '-rotate-90' : ''}`}>▾</span>
-                    <span className="text-accent-cyan">#</span> {genre}
+                    <span className="text-accent-cyan">#</span> {t(`genres.${genre}`, genre)}
                     <span className="text-dash-muted text-xs font-normal">({games.length})</span>
                   </button>
                   {!collapsed && (
@@ -305,15 +307,15 @@ export default function CatalogPage() {
           <div className="mt-8 border-t border-white/5 pt-6">
             <h3 className="font-heading font-black text-white uppercase tracking-wider text-sm mb-4 flex items-center gap-2">
               <Globe size={18} className="text-accent-purple" />
-              Resultados da RAWG
-              <span className="text-dash-muted text-xs font-normal">({rawgResults.length} novos)</span>
+              {t('catalog.rawgResults')}
+              <span className="text-dash-muted text-xs font-normal">({t('catalog.newGames', { count: rawgResults.length })})</span>
             </h3>
             {rawgLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 size={24} className="animate-spin text-accent-purple" />
               </div>
             ) : rawgResults.length === 0 ? (
-              <p className="text-dash-muted text-sm text-center py-6">Nenhum jogo novo encontrado na RAWG para "{search}"</p>
+              <p className="text-dash-muted text-sm text-center py-6">{t('catalog.noRawgResults', { search })}</p>
             ) : (
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
                 {rawgResults.map(game => (
@@ -412,6 +414,7 @@ function CatalogCard({ game, onClick }) {
 
 /* ── Modal ────────────────────────────────────────── */
 function CatalogModal({ game, onClose }) {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const { reload } = useUserGames()
   const [showForm, setShowForm] = useState(false)
@@ -425,7 +428,7 @@ function CatalogModal({ game, onClose }) {
   async function handleAdd(e) {
     e.preventDefault()
     if (!supabase || !user) {
-      toast.error('Faça login para adicionar jogos')
+      toast.error(t('catalog.loginRequired'))
       return
     }
     setSaving(true)
@@ -448,7 +451,7 @@ function CatalogModal({ game, onClose }) {
         ano_abandonado: form.status === 'abandonado' ? year : null,
       }, { onConflict: 'user_id,game_id' })
       if (error) throw error
-      toast.success(`${game.nome} adicionado!`)
+      toast.success(t('catalog.addedToast', { name: game.nome }))
       reload?.()
       onClose()
     } catch (err) {
@@ -506,14 +509,14 @@ function CatalogModal({ game, onClose }) {
           <button
             onClick={() => {
               if (!user) {
-                toast.error('Faça login para adicionar jogos ao seu hub')
+                toast.error(t('catalog.loginRequiredHub'))
                 return
               }
               setShowForm(true)
             }}
             className="w-full py-3 rounded-xl border-2 border-dashed border-accent-cyan/30 text-accent-cyan font-heading font-black uppercase tracking-wider text-sm hover:bg-accent-cyan/5 hover:border-accent-cyan/50 transition-all cursor-pointer"
           >
-            + ADICIONAR AO MEU HUB
+            {t('catalog.addToHub')}
           </button>
         ) : (
           <form onSubmit={handleAdd} className="border-t border-white/5 pt-4 mt-2">
@@ -557,11 +560,11 @@ function CatalogModal({ game, onClose }) {
             <div className="flex gap-2">
               <button type="submit" disabled={saving}
                 className="flex-1 py-2.5 rounded-lg font-heading font-black uppercase tracking-wider text-sm bg-gradient-to-r from-accent-cyan to-accent-purple text-dash-bg hover:shadow-[0_0_20px_rgba(0,245,255,0.3)] transition-all disabled:opacity-50 cursor-pointer">
-                {saving ? 'Salvando...' : '+ Adicionar à Coleção'}
+                {saving ? t('common.saving', 'Salvando...') : t('catalog.addToCollection')}
               </button>
               <button type="button" onClick={() => setShowForm(false)}
                 className="px-4 py-2.5 rounded-lg border border-white/10 text-dash-muted text-sm hover:bg-white/5 transition-colors cursor-pointer">
-                Cancelar
+                {t('common.cancel', 'Cancelar')}
               </button>
             </div>
           </form>

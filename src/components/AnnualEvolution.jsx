@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { parseTime } from '../utils/helpers'
 import Accordion from './Accordion'
 import { Sparkles, Rocket, Gem, Swords, BarChart3 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 const icoProps = { size: 16, strokeWidth: 2.5, className: 'inline-block align-[-0.125em]' }
 
@@ -13,6 +14,7 @@ const CONFIGS = [
 ]
 
 export default function AnnualEvolution({ zerados }) {
+  const { t } = useTranslation()
   const dados = useMemo(() => {
     return CONFIGS.map(c => {
       const gs = zerados.filter(g => g.ano_zerado === c.ano)
@@ -26,7 +28,7 @@ export default function AnnualEvolution({ zerados }) {
   const maxCount = Math.max(...dados.map(d => d.count), 1)
 
   return (
-    <Accordion title="EVOLUÇÃO ANUAL" color="#818cf8" icon={<BarChart3 size={18} strokeWidth={2.5} />}>
+    <Accordion title={t('annualEvolution.title')} color="#818cf8" icon={<BarChart3 size={18} strokeWidth={2.5} />}>
       <div className="pt-3 space-y-3">
         {dados.map(d => {
           const w = Math.round((d.count / maxCount) * 100)
@@ -40,7 +42,7 @@ export default function AnnualEvolution({ zerados }) {
                   className="h-full rounded flex items-center pl-2 transition-all duration-500"
                   style={{ width: `${w}%`, background: `linear-gradient(90deg, ${d.cor}, ${d.cor}99)` }}
                 >
-                  <span className="font-heading font-black text-[0.85em] text-[#0d0d12] whitespace-nowrap">{d.count} jogos</span>
+                  <span className="font-heading font-black text-[0.85em] text-[#0d0d12] whitespace-nowrap">{d.count} {t('annualEvolution.games')}</span>
                 </div>
               </div>
               <div className="text-[0.65em] font-extrabold w-13 shrink-0 text-right whitespace-nowrap" style={{ color: d.cor }}>

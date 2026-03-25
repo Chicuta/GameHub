@@ -1,15 +1,17 @@
 import { useGameDetail } from '../contexts/GameDetailContext'
 import SectionTitle from './SectionTitle'
 import { Skull, Calendar } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export default function Cemetery({ abandonados }) {
+  const { t } = useTranslation()
   const { openGame } = useGameDetail()
 
   if (abandonados.length === 0) return null
 
   return (
     <div className="mb-8">
-      <SectionTitle icon={<Skull size={22} strokeWidth={2.5} className="text-accent-danger" />}>O CEMITÉRIO</SectionTitle>
+      <SectionTitle icon={<Skull size={22} strokeWidth={2.5} className="text-accent-danger" />}>{t('cemetery.title')}</SectionTitle>
       <div className="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-2.5">
         {abandonados.map(g => (
           <div

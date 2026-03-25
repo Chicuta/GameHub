@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { parseTime, formatTime } from '../utils/helpers'
 import SectionTitle from './SectionTitle'
 import Accordion from './Accordion'
@@ -100,6 +101,7 @@ const inputCls = 'w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2
 const labelCls = 'block text-xs font-bold uppercase tracking-wider text-dash-muted mb-1'
 
 function EditForm({ game, onSave, onCancel, onDelete }) {
+  const { t } = useTranslation()
   const [form, setForm] = useState({
     status: game._status || 'jogando',
     nota: game.nota ?? '',
@@ -185,7 +187,7 @@ function EditForm({ game, onSave, onCancel, onDelete }) {
         </div>
         {isZerado && (
           <div>
-            <label className={labelCls}>Ano que zerou</label>
+            <label className={labelCls}>{t('globalAnalysis.yearCompleted')}</label>
             <input type="number" min="1970" max={new Date().getFullYear()} value={form.anoZerado} onChange={e => setForm(f => ({ ...f, anoZerado: e.target.value }))} placeholder={String(new Date().getFullYear())} className={inputCls} />
           </div>
         )}
@@ -194,11 +196,11 @@ function EditForm({ game, onSave, onCancel, onDelete }) {
       <div className="flex gap-2">
         <button type="submit" disabled={saving}
           className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg font-heading font-black uppercase tracking-wider text-xs bg-gradient-to-r from-accent-cyan to-accent-purple text-dash-bg hover:shadow-[0_0_15px_rgba(0,245,255,0.3)] transition-all disabled:opacity-50 cursor-pointer">
-          <Save size={14} /> {saving ? 'Salvando...' : 'Salvar'}
+          <Save size={14} /> {saving ? '...' : t('common.save')}
         </button>
         <button type="button" onClick={handleDelete} disabled={saving}
           className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all cursor-pointer disabled:opacity-50 ${confirmDelete ? 'bg-red-500/20 text-red-400 border border-red-500/40' : 'border border-white/10 text-dash-muted hover:text-red-400 hover:border-red-500/30'}`}>
-          <Trash2 size={14} /> {confirmDelete ? 'Confirmar?' : 'Excluir'}
+          <Trash2 size={14} /> {confirmDelete ? '?' : t('common.delete')}
         </button>
       </div>
     </form>
@@ -206,6 +208,7 @@ function EditForm({ game, onSave, onCancel, onDelete }) {
 }
 
 function GameList({ allGames, updateGame, removeGame, reload }) {
+  const { t } = useTranslation()
   const [editingId, setEditingId] = useState(null)
   const [search, setSearch] = useState('')
 
@@ -215,19 +218,19 @@ function GameList({ allGames, updateGame, removeGame, reload }) {
     return allGames.filter(g => g.nome.toLowerCase().includes(q))
   }, [allGames, search])
 
-  if (allGames.length === 0) return <p className="text-dash-muted text-sm py-4 text-center">Nenhum jogo adicionado ainda.</p>
+  if (allGames.length === 0) return <p className="text-dash-muted text-sm py-4 text-center">{t('globalAnalysis.noGamesYet')}</p>
 
   async function handleSave(id, fields) {
     const err = await updateGame(id, fields)
     if (err) { toast.error(err.message || 'Erro ao salvar'); return }
-    toast.success('Jogo atualizado!')
+    toast.success(t('globalAnalysis.updatedToast'))
     setEditingId(null)
   }
 
   async function handleDelete(id) {
     const err = await removeGame(id)
     if (err) { toast.error(err.message || 'Erro ao excluir'); return }
-    toast.success('Jogo removido!')
+    toast.success(t('globalAnalysis.removedToast'))
     setEditingId(null)
   }
 
@@ -239,13 +242,13 @@ function GameList({ allGames, updateGame, removeGame, reload }) {
           type="text"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="Buscar por nome..."
+          placeholder={t('globalAnalysis.searchPlaceholder')}
           className="w-full bg-black/40 border border-white/10 rounded-lg pl-8 pr-3 py-2 text-white text-sm focus:outline-none focus:border-accent-cyan transition-colors"
         />
       </div>
       <div className="space-y-2 max-h-[500px] overflow-y-auto">
         {filtered.length === 0 && (
-          <p className="text-dash-muted text-sm py-4 text-center">Nenhum jogo encontrado.</p>
+          <p className="text-dash-muted text-sm py-4 text-center">{t('globalAnalysis.noGamesFound')}</p>
         )}
         {filtered.map((g, i) => {
         const st = STATUS_STYLE[g._status] || STATUS_STYLE.backlog
@@ -265,7 +268,7 @@ function GameList({ allGames, updateGame, removeGame, reload }) {
               <div className="text-white font-bold text-sm truncate">{g.nome}</div>
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                 <span className="flex items-center gap-1 text-[0.65rem] font-bold uppercase" style={{ color: st.color }}>
-                  {st.icon} {st.label}
+                  {st.icon} {t('status.' + g._status)}
                 </span>
                 {g.console && <span className="text-[0.6rem] text-dash-muted">• {g.console}</span>}
                 {g.genero && <span className="text-[0.6rem] text-dash-muted">• {g.genero}</span>}
@@ -291,6 +294,7 @@ function GameList({ allGames, updateGame, removeGame, reload }) {
 }
 
 function YearByYear({ allGames }) {
+  const { t } = useTranslation()
   const yearData = useMemo(() => {
     const map = {}
     allGames.forEach(g => {
@@ -329,25 +333,25 @@ function YearByYear({ allGames }) {
       <div className="pt-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
           <div className="bg-black/30 rounded-lg p-2.5 text-center">
-            <div className="text-[0.55rem] font-bold uppercase text-dash-muted tracking-wider mb-0.5">Jogos</div>
+            <div className="text-[0.55rem] font-bold uppercase text-dash-muted tracking-wider mb-0.5">{t('globalAnalysis.games')}</div>
             <div className="font-heading font-black text-lg text-accent-cyan">{y.total}</div>
           </div>
           <div className="bg-black/30 rounded-lg p-2.5 text-center">
-            <div className="text-[0.55rem] font-bold uppercase text-dash-muted tracking-wider mb-0.5">Zerados</div>
+            <div className="text-[0.55rem] font-bold uppercase text-dash-muted tracking-wider mb-0.5">{t('globalAnalysis.completed')}</div>
             <div className="font-heading font-black text-lg text-accent-success">{y.zerados}</div>
           </div>
           <div className="bg-black/30 rounded-lg p-2.5 text-center">
-            <div className="text-[0.55rem] font-bold uppercase text-dash-muted tracking-wider mb-0.5">Horas</div>
+            <div className="text-[0.55rem] font-bold uppercase text-dash-muted tracking-wider mb-0.5">{t('globalAnalysis.hours')}</div>
             <div className="font-heading font-black text-lg text-accent-purple">{formatTime(y.horas)}</div>
           </div>
           <div className="bg-black/30 rounded-lg p-2.5 text-center">
-            <div className="text-[0.55rem] font-bold uppercase text-dash-muted tracking-wider mb-0.5">Nota Média</div>
+            <div className="text-[0.55rem] font-bold uppercase text-dash-muted tracking-wider mb-0.5">{t('globalAnalysis.avgRating')}</div>
             <div className="font-heading font-black text-lg text-accent-gold">{y.media ?? '—'} {y.media ? '★' : ''}</div>
           </div>
         </div>
         {y.topGenero && (
           <div className="text-[0.7rem] text-dash-muted mb-2">
-            Gênero mais jogado: <span className="text-accent-purple font-bold">{y.topGenero}</span>
+            {t('globalAnalysis.topGenre')}: <span className="text-accent-purple font-bold">{t('genres.' + y.topGenero, y.topGenero)}</span>
           </div>
         )}
         <MiniBar width={(y.total / maxGames) * 100} color="#f472b6" />
@@ -357,6 +361,7 @@ function YearByYear({ allGames }) {
 }
 
 export default function GlobalAnalysis({ zerados, jogando = [], abandonados = [], backlog = [], pausados = [], updateGame, removeGame, reload }) {
+  const { t } = useTranslation()
   const allGames = useMemo(() => [
     ...zerados.map(g => ({ ...g, _status: 'zerado' })),
     ...jogando.map(g => ({ ...g, _status: 'jogando' })),
@@ -392,31 +397,31 @@ export default function GlobalAnalysis({ zerados, jogando = [], abandonados = []
 
   return (
     <div className="mb-8">
-      <SectionTitle icon={<TrendingUp size={22} strokeWidth={2.5} className="text-accent-cyan" />}>ANÁLISE GLOBAL</SectionTitle>
+      <SectionTitle icon={<TrendingUp size={22} strokeWidth={2.5} className="text-accent-cyan" />}>{t('globalAnalysis.title')}</SectionTitle>
 
-      <Accordion title={`MEUS JOGOS (${allGames.length})`} color="#00f5ff" icon={<List size={18} strokeWidth={2.5} />}>
+      <Accordion title={t('globalAnalysis.myGames', { count: allGames.length })} color="#00f5ff" icon={<List size={18} strokeWidth={2.5} />}>
         <GameList allGames={allGames} updateGame={updateGame} removeGame={removeGame} reload={reload} />
       </Accordion>
 
-      <Accordion title="DISTRIBUIÇÃO DE NOTAS" color="#ffcc00" icon={<Star size={18} strokeWidth={2.5} />}>
+      <Accordion title={t('globalAnalysis.ratingDist')} color="#ffcc00" icon={<Star size={18} strokeWidth={2.5} />}>
         <div className="pt-3">
           <NotesHistogram zerados={gamesWithNota} />
         </div>
       </Accordion>
 
-      <Accordion title="GÊNEROS" color="#bc13fe" icon={<Dna size={18} strokeWidth={2.5} />}>
+      <Accordion title={t('globalAnalysis.genres')} color="#bc13fe" icon={<Dna size={18} strokeWidth={2.5} />}>
         <div className="pt-3">
-          <BarChart entries={genEntries} color="#bc13fe" />
+          <BarChart entries={genEntries.map(([name, count]) => [t('genres.' + name, name), count])} color="#bc13fe" />
         </div>
       </Accordion>
 
-      <Accordion title="PLATAFORMAS" color="#0072ff" icon={<Gamepad2 size={18} strokeWidth={2.5} />}>
+      <Accordion title={t('globalAnalysis.platforms')} color="#0072ff" icon={<Gamepad2 size={18} strokeWidth={2.5} />}>
         <div className="pt-3">
           <BarChart entries={conEntries} color="#0072ff" />
         </div>
       </Accordion>
 
-      <Accordion title="MÉDIA DE NOTA POR CONSOLE" color="#34d399" icon={<BarChart3 size={18} strokeWidth={2.5} />}>
+      <Accordion title={t('globalAnalysis.avgByConsole')} color="#34d399" icon={<BarChart3 size={18} strokeWidth={2.5} />}>
         <div className="pt-3">
           {avgEntries.map(([name, val]) => {
             const w = (val / 10) * 100

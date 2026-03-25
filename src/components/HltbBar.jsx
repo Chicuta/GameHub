@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { parseTime, formatTime } from '../utils/helpers'
 import { Clock } from 'lucide-react'
 
@@ -7,15 +8,16 @@ import { Clock } from 'lucide-react'
  * Variants: 'card' (compact, for list cards), 'detail' (larger, for modals), 'mini' (backlog badge)
  */
 export default function HltbBar({ tempo, hltb, consoleColor, variant = 'card' }) {
+  const { t } = useTranslation()
   const [hover, setHover] = useState(false)
-  const t = parseTime(tempo)
+  const played = parseTime(tempo)
   const h = parseFloat(hltb) || 0
   if (h <= 0 && t <= 0) return null
 
-  const p = h > 0 ? Math.min((t / h) * 100, 100) : 0
+  const p = h > 0 ? Math.min((played / h) * 100, 100) : 0
   const pRound = Math.round(p)
-  const restante = h > 0 ? Math.max(h - t, 0) : 0
-  const over = h > 0 && t > h
+  const restante = h > 0 ? Math.max(h - played, 0) : 0
+  const over = h > 0 && played > h
 
   const barColor = over
     ? '#ff0055'
@@ -48,9 +50,9 @@ export default function HltbBar({ tempo, hltb, consoleColor, variant = 'card' })
 
         {hover && (
           <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2.5 py-1.5 rounded-lg bg-black/95 border border-white/10 text-[0.6em] font-bold whitespace-nowrap z-30 pointer-events-none shadow-xl">
-            <div className="text-white">{formatTime(t)} / {h}h</div>
-            {restante > 0 && <div className="text-accent-cyan">{formatTime(restante)} restantes</div>}
-            {over && <div className="text-accent-danger">+{formatTime(t - h)} além do HLTB</div>}
+            <div className="text-white">{formatTime(played)} / {h}h</div>
+            {restante > 0 && <div className="text-accent-cyan">{t('hltbBar.remaining', { time: formatTime(restante) })}</div>}
+            {over && <div className="text-accent-danger">+{formatTime(played - h)} {t('hltbBar.overHltb')}</div>}
           </div>
         )}
       </div>
@@ -67,7 +69,7 @@ export default function HltbBar({ tempo, hltb, consoleColor, variant = 'card' })
       <div className="flex justify-between text-[0.65em] font-extrabold mb-1">
         <span style={{ color: barColor }}>{pRound}%{over ? ' ⚠️' : ''}</span>
         <span className="text-dash-muted">
-          {formatTime(t)}{h > 0 ? ` / ${h}h` : ''}
+          {formatTime(played)}{h > 0 ? ` / ${h}h` : ''}
         </span>
       </div>
       <div className="h-2 bg-black/50 rounded-full overflow-hidden">
@@ -90,12 +92,12 @@ export default function HltbBar({ tempo, hltb, consoleColor, variant = 'card' })
         <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2.5 py-1.5 rounded-lg bg-black/95 border border-white/10 text-[0.6em] font-bold whitespace-nowrap z-30 pointer-events-none shadow-xl">
           {restante > 0 ? (
             <div className="flex items-center gap-1 text-accent-cyan">
-              <Clock size={10} strokeWidth={2.5} /> {formatTime(restante)} restantes
+              <Clock size={10} strokeWidth={2.5} /> {t('hltbBar.remaining', { time: formatTime(restante) })}
             </div>
           ) : over ? (
-            <div className="text-accent-danger">+{formatTime(t - h)} além do HLTB</div>
+            <div className="text-accent-danger">+{formatTime(played - h)} {t('hltbBar.overHltb')}</div>
           ) : (
-            <div className="text-accent-success">✅ HLTB atingido!</div>
+            <div className="text-accent-success">{t('hltbBar.reached')}</div>
           )}
         </div>
       )}

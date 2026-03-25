@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { parseTime, formatTime } from '../utils/helpers'
 import ConsoleBadge from './ConsoleBadge'
 import SectionTitle from './SectionTitle'
@@ -51,9 +52,10 @@ function RetroCard({ game }) {
 }
 
 export default function Retrospective({ zerados }) {
+  const { t } = useTranslation()
   return (
     <div className="mb-8">
-      <SectionTitle icon={<Calendar size={22} strokeWidth={2.5} className="text-accent-cyan" />}>RETROSPECTIVA DE TEMPORADAS</SectionTitle>
+      <SectionTitle icon={<Calendar size={22} strokeWidth={2.5} className="text-accent-cyan" />}>{t('retrospective.title')}</SectionTitle>
       {SEASONS.map(s => {
         const gAno = zerados.filter(g => g.ano_zerado === s.ano).sort((a, b) => (b.nota || 0) - (a.nota || 0))
         if (gAno.length === 0) return null
@@ -72,23 +74,23 @@ export default function Retrospective({ zerados }) {
             title={<span className="flex items-center gap-1">{s.icon} {s.ano}</span>}
             color={s.c}
             borderColor={s.c}
-            rightText={`${gAno.length} JOGOS • ${formatTime(hA)}`}
+            rightText={`${gAno.length} ${t('retrospective.games')} • ${formatTime(hA)}`}
           >
             <div className="pt-3">
               <div className="flex flex-col gap-1.5 mb-4">
-                <MiniAccordion title="Consoles" icon={<Gamepad2 size={14} strokeWidth={2.5} />}>
+                <MiniAccordion title={t('retrospective.consoles')} icon={<Gamepad2 size={14} strokeWidth={2.5} />}>
                   {Object.entries(stC).sort((a, b) => b[1] - a[1]).map(([n, v]) => (
                     <div key={n} className="flex justify-between text-dash-muted"><span>{n}</span><b className="text-white">{v}</b></div>
                   ))}
                 </MiniAccordion>
-                <MiniAccordion title="Gêneros" icon={<Dna size={14} strokeWidth={2.5} />}>
+                <MiniAccordion title={t('retrospective.genres')} icon={<Dna size={14} strokeWidth={2.5} />}>
                   {Object.entries(stG).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([n, v]) => (
-                    <div key={n} className="flex justify-between text-dash-muted"><span>{n}</span><b className="text-white">{v}</b></div>
+                    <div key={n} className="flex justify-between text-dash-muted"><span>{t('genres.' + n, n)}</span><b className="text-white">{v}</b></div>
                   ))}
                 </MiniAccordion>
-                <MiniAccordion title="Notas" icon={<Star size={14} strokeWidth={2.5} />}>
+                <MiniAccordion title={t('retrospective.ratings')} icon={<Star size={14} strokeWidth={2.5} />}>
                   {Object.entries(stN).sort((a, b) => Number(b[0]) - Number(a[0])).map(([n, v]) => (
-                    <div key={n} className="flex justify-between text-dash-muted"><span>Nota {n}</span><b className="text-white">{v} jogos</b></div>
+                    <div key={n} className="flex justify-between text-dash-muted"><span>{t('retrospective.ratingN', { n })}</span><b className="text-white">{v} {t('retrospective.gamesCount')}</b></div>
                   ))}
                 </MiniAccordion>
               </div>

@@ -1,6 +1,8 @@
 import { Zap } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export default function XpBar({ zerados }) {
+  const { t } = useTranslation()
   const xpCap = Math.max(10, Math.ceil(zerados.length / 5) * 10)
   const xpPercent = Math.min(100, Math.round((zerados.length / xpCap) * 100))
   const level = Math.floor(zerados.length / 5)
@@ -8,7 +10,7 @@ export default function XpBar({ zerados }) {
   return (
     <div className="bg-dash-surface p-3 rounded-xl border border-dash-border mb-5">
       <div className="flex justify-between mb-1.5 font-heading font-bold text-sm uppercase">
-        <span><Zap size={14} strokeWidth={2.5} className="inline-block align-[-0.125em] mr-1 text-accent-gold" /> NÍVEL {level}</span>
+        <span><Zap size={14} strokeWidth={2.5} className="inline-block align-[-0.125em] mr-1 text-accent-gold" /> {t('xpBar.level', { level })}</span>
         <span className="text-accent-cyan">{xpPercent}%</span>
       </div>
       <div className="h-2 bg-black/60 rounded overflow-hidden">

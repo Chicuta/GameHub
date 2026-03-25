@@ -1,9 +1,12 @@
 import { useEffect, useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useGameDetail } from '../contexts/GameDetailContext'
 import { useUserGames } from '../contexts/UserGamesContext'
+import { useAuth } from '../contexts/AuthContext'
 import { parseTime, formatTime, getConsoleStyle, daysBetween, todayStr, formatDateBR } from '../utils/helpers'
+import { fetchSessions, createSession, updateSession, deleteSession } from '../lib/gamesApi'
 import ConsoleBadge from './ConsoleBadge'
-import { X, Clock, Target, Calendar, Star, Flame, TrendingUp, Gamepad2, Plus, Timer, Trophy } from 'lucide-react'
+import { X, Clock, Target, Calendar, Star, Flame, TrendingUp, Gamepad2, Plus, Timer, Trophy, Pencil, Trash2, History, ChevronDown, ChevronUp } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 function StatPill({ icon, label, value, color }) {
@@ -18,11 +21,12 @@ function StatPill({ icon, label, value, color }) {
 }
 
 function ProgressSection({ tempo, hltb, consoleStyle }) {
-  const t = parseTime(tempo)
+  const { t } = useTranslation()
+  const played = parseTime(tempo)
   const h = parseFloat(hltb) || 0
-  const p = h > 0 ? Math.min(Math.round((t / h) * 100), 100) : 0
-  const restante = h > 0 ? Math.max(h - t, 0) : 0
-  const over = h > 0 && t > h
+  const p = h > 0 ? Math.min(Math.round((played / h) * 100), 100) : 0
+  const restante = h > 0 ? Math.max(h - played, 0) : 0
+  const over = h > 0 && played > h
 
   const barColor = over
     ? '#ff0055'
@@ -37,8 +41,8 @@ function ProgressSection({ tempo, hltb, consoleStyle }) {
   return (
     <div className="bg-black/20 rounded-xl p-4 border border-white/5">
       <div className="flex justify-between text-sm font-extrabold mb-2">
-        <span style={{ color: barColor }}>{p}%{over ? ' ⚠️' : ''} concluído</span>
-        <span className="text-dash-muted">{formatTime(t)} / {h > 0 ? `${h}h` : '—'}</span>
+        <span style={{ color: barColor }}>{p}%{over ? ' ⚠️' : ''} {t('gameDetail.completed')}</span>
+        <span className="text-dash-muted">{formatTime(played)} / {h > 0 ? `${h}h` : '—'}</span>
       </div>
       <div className="h-3 bg-black/50 rounded-full overflow-hidden">
         <div
@@ -58,11 +62,11 @@ function ProgressSection({ tempo, hltb, consoleStyle }) {
       {h > 0 && (
         <div className="flex justify-between items-center mt-2">
           <div className="text-[0.7em] font-bold text-dash-muted">
-            {restante > 0 ? `${formatTime(restante)} restantes` : over ? `+${formatTime(t - h)} além do HLTB` : '✅ HLTB atingido!'}
+            {restante > 0 ? `${formatTime(restante)} ${t('gameDetail.remaining')}` : over ? `+${formatTime(played - h)} além do HLTB` : '✅ HLTB atingido!'}
           </div>
           {restante > 0 && (
             <div className="text-[0.65em] font-black px-2 py-0.5 rounded-full bg-accent-cyan/10 border border-accent-cyan/20 text-accent-cyan">
-              {restante.toFixed(1)}h faltando
+              {t('gameDetail.hoursLeft', { hours: restante.toFixed(1) })}
             </div>
           )}
         </div>
@@ -72,16 +76,17 @@ function ProgressSection({ tempo, hltb, consoleStyle }) {
 }
 
 function EtaSection({ game }) {
-  const t = parseTime(game.tempo)
+  const { t } = useTranslation()
+  const played = parseTime(game.tempo)
   const h = parseFloat(game.hltb) || 0
   const dataInicio = game.data_inicio
   const hoje = todayStr()
 
-  if (!dataInicio || h <= 0 || t <= 0) return null
+  if (!dataInicio || h <= 0 || played <= 0) return null
 
   const diasDecorridos = Math.max(1, daysBetween(dataInicio, hoje))
-  const hPorDia = t / diasDecorridos
-  const restante = Math.max(h - t, 0)
+  const hPorDia = played / diasDecorridos
+  const restante = Math.max(h - played, 0)
 
   if (restante === 0) return null
 
@@ -93,20 +98,20 @@ function EtaSection({ game }) {
   return (
     <div className="bg-black/20 rounded-xl p-4 border border-white/5">
       <div className="text-[0.7em] font-black uppercase tracking-wider text-dash-muted mb-3 flex items-center gap-1.5">
-        <TrendingUp size={14} strokeWidth={2.5} /> Previsão de Término
+        <TrendingUp size={14} strokeWidth={2.5} /> {t('gameDetail.etaTitle')}
       </div>
       <div className="grid grid-cols-3 gap-3 text-center">
         <div>
           <div className="text-lg font-black text-accent-cyan">{formatTime(hPorDia)}</div>
-          <div className="text-[0.6em] font-bold text-dash-muted uppercase">por dia</div>
+          <div className="text-[0.6em] font-bold text-dash-muted uppercase">{t('gameDetail.perDay')}</div>
         </div>
         <div>
           <div className="text-lg font-black text-accent-success">~{diasRestantes}d</div>
-          <div className="text-[0.6em] font-bold text-dash-muted uppercase">restantes</div>
+          <div className="text-[0.6em] font-bold text-dash-muted uppercase">{t('gameDetail.remaining')}</div>
         </div>
         <div>
           <div className="text-lg font-black text-accent-gold">{dataEstimadaStr}</div>
-          <div className="text-[0.6em] font-bold text-dash-muted uppercase">previsão</div>
+          <div className="text-[0.6em] font-bold text-dash-muted uppercase">{t('gameDetail.forecast')}</div>
         </div>
       </div>
     </div>
@@ -114,17 +119,20 @@ function EtaSection({ game }) {
 }
 
 const statusConfig = {
-  jogando: { label: 'Jogando', color: '#00f5ff', icon: <Flame size={14} strokeWidth={2.5} /> },
-  zerado: { label: 'Zerado', color: '#00ff9f', icon: <Star size={14} strokeWidth={2.5} /> },
-  pausado: { label: 'Pausado', color: '#bc13fe', icon: <Clock size={14} strokeWidth={2.5} /> },
-  abandonado: { label: 'Abandonado', color: '#ff0055', icon: <X size={14} strokeWidth={2.5} /> },
-  backlog: { label: 'Backlog', color: '#94a3b8', icon: <Target size={14} strokeWidth={2.5} /> },
+  jogando: { label: 'status.playing', color: '#00f5ff', icon: <Flame size={14} strokeWidth={2.5} /> },
+  zerado: { label: 'status.completed', color: '#00ff9f', icon: <Star size={14} strokeWidth={2.5} /> },
+  pausado: { label: 'status.paused', color: '#bc13fe', icon: <Clock size={14} strokeWidth={2.5} /> },
+  abandonado: { label: 'status.abandoned', color: '#ff0055', icon: <X size={14} strokeWidth={2.5} /> },
+  backlog: { label: 'status.backlog', color: '#94a3b8', icon: <Target size={14} strokeWidth={2.5} /> },
 }
 
-function SessionLogger({ game }) {
+function SessionLogger({ game, onSessionAdded }) {
+  const { t } = useTranslation()
+  const { user } = useAuth()
   const { updateGame, reload } = useUserGames()
   const { openGame } = useGameDetail()
   const [open, setOpen] = useState(false)
+  const [sessionDate, setSessionDate] = useState(() => new Date().toISOString().split('T')[0])
   const [inicio, setInicio] = useState('')
   const [fim, setFim] = useState('')
   const [marcarZerado, setMarcarZerado] = useState(false)
@@ -154,26 +162,45 @@ function SessionLogger({ game }) {
       fields.status = 'zerado'
       fields.data_zerado = today
       fields.ano_zerado = year
+    } else if (game._status === 'pausado') {
+      fields.status = 'jogando'
+      fields.data_inicio = fields.data_inicio || today
+    }
+
+    // Save session record
+    if (user) {
+      await createSession({
+        user_game_id: game._id,
+        user_id: user.id,
+        session_date: sessionDate,
+        start_time: inicio || null,
+        end_time: fim || null,
+        duration: Math.round(duracao * 100) / 100,
+      })
     }
 
     const err = await updateGame(game._id, fields)
     if (!err) {
       const msg = marcarZerado
-        ? `🏆 ${game.nome} ZERADO! +${formatTime(duracao)} registrado`
-        : `+${formatTime(duracao)} registrado!`
+        ? t('gameDetail.completedToast', { name: game.nome, time: formatTime(duracao) })
+        : t('gameDetail.sessionToast', { time: formatTime(duracao) })
       toast.success(msg)
       await reload()
       if (marcarZerado) {
         openGame({ ...game, tempo: newTempo, data_zerado: today, ano_zerado: year, _status: 'zerado' })
+      } else if (game._status === 'pausado') {
+        openGame({ ...game, tempo: newTempo, _status: 'jogando', data_inicio: game.data_inicio || today })
       } else {
         openGame({ ...game, tempo: newTempo })
       }
+      onSessionAdded?.()
       setInicio('')
       setFim('')
+      setSessionDate(new Date().toISOString().split('T')[0])
       setMarcarZerado(false)
       setOpen(false)
     } else {
-      toast.error('Erro ao salvar sessão')
+      toast.error(t('gameDetail.sessionError'))
     }
     setSaving(false)
   }
@@ -184,7 +211,7 @@ function SessionLogger({ game }) {
         onClick={() => setOpen(true)}
         className="w-full py-2.5 rounded-xl border-2 border-dashed border-accent-cyan/30 text-accent-cyan font-heading font-black uppercase tracking-wider text-xs hover:bg-accent-cyan/5 hover:border-accent-cyan/50 transition-all cursor-pointer flex items-center justify-center gap-2"
       >
-        <Timer size={14} strokeWidth={2.5} /> Registrar Sessão
+        <Timer size={14} strokeWidth={2.5} /> {t('gameDetail.registerSession')}
       </button>
     )
   }
@@ -195,19 +222,23 @@ function SessionLogger({ game }) {
     <div className="bg-black/20 rounded-xl p-4 border border-accent-cyan/20">
       <div className="flex items-center justify-between mb-3">
         <div className="text-[0.7em] font-black uppercase tracking-wider text-accent-cyan flex items-center gap-1.5">
-          <Timer size={14} strokeWidth={2.5} /> Nova Sessão
+          <Timer size={14} strokeWidth={2.5} /> {t('gameDetail.newSession')}
         </div>
         <button onClick={() => setOpen(false)} className="text-dash-muted hover:text-white cursor-pointer">
           <X size={14} strokeWidth={2.5} />
         </button>
       </div>
-      <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end">
+      <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-end">
         <div>
-          <label className="block text-[0.6em] font-bold uppercase text-dash-muted mb-1">Início</label>
+          <label className="block text-[0.6em] font-bold uppercase text-dash-muted mb-1">{t('sessions.date')}</label>
+          <input type="date" value={sessionDate} onChange={e => setSessionDate(e.target.value)} className={inputCls} />
+        </div>
+        <div>
+          <label className="block text-[0.6em] font-bold uppercase text-dash-muted mb-1">{t('gameDetail.start')}</label>
           <input type="time" value={inicio} onChange={e => setInicio(e.target.value)} className={inputCls} />
         </div>
         <div>
-          <label className="block text-[0.6em] font-bold uppercase text-dash-muted mb-1">Fim</label>
+          <label className="block text-[0.6em] font-bold uppercase text-dash-muted mb-1">{t('gameDetail.end')}</label>
           <input type="time" value={fim} onChange={e => setFim(e.target.value)} className={inputCls} />
         </div>
         <button
@@ -220,7 +251,7 @@ function SessionLogger({ game }) {
       </div>
       {duracao && duracao > 0 && (
         <div className="mt-2 text-[0.7em] font-bold text-accent-success text-center">
-          +{formatTime(duracao)} será adicionado ({formatTime(parseTime(game.tempo))} → {formatTime(parseTime(game.tempo) + duracao)})
+          {t('gameDetail.willBeAdded', { time: formatTime(duracao) })} ({formatTime(parseTime(game.tempo))} → {formatTime(parseTime(game.tempo) + duracao)})
         </div>
       )}
       {/* Marcar como zerado */}
@@ -241,9 +272,181 @@ function SessionLogger({ game }) {
         <span className={`text-xs font-black uppercase tracking-wider transition-colors ${
           marcarZerado ? 'text-accent-success' : 'text-dash-muted group-hover:text-white'
         }`}>
-          🏆 Zerado! (finalizar jogo)
+          {t('gameDetail.completedCheck')}
         </span>
       </label>
+    </div>
+  )
+}
+
+/* ── Session History ──────────────────────────────── */
+function SessionHistory({ game }) {
+  const { t } = useTranslation()
+  const { updateGame, reload } = useUserGames()
+  const { openGame } = useGameDetail()
+  const [sessions, setSessions] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [expanded, setExpanded] = useState(false)
+  const [editing, setEditing] = useState(null)
+  const [editData, setEditData] = useState({})
+
+  const loadSessions = async () => {
+    if (!game._id) return
+    setLoading(true)
+    const data = await fetchSessions(game._id)
+    setSessions(data)
+    setLoading(false)
+  }
+
+  useEffect(() => { loadSessions() }, [game._id])
+
+  if (!game._id) return null
+
+  const totalFromSessions = sessions.reduce((sum, s) => sum + (Number(s.duration) || 0), 0)
+
+  async function recalcTempo() {
+    const rounded = Math.round(totalFromSessions * 100) / 100
+    const err = await updateGame(game._id, { tempo: rounded })
+    if (!err) {
+      toast.success(t('sessions.recalculated'))
+      await reload()
+      openGame({ ...game, tempo: rounded })
+    }
+  }
+
+  async function handleDelete(session) {
+    const { error } = await deleteSession(session.id)
+    if (!error) {
+      toast.success(t('sessions.deletedToast'))
+      const newSessions = sessions.filter(s => s.id !== session.id)
+      setSessions(newSessions)
+      // Recalculate total
+      const newTotal = Math.round(newSessions.reduce((sum, s) => sum + (Number(s.duration) || 0), 0) * 100) / 100
+      await updateGame(game._id, { tempo: newTotal })
+      await reload()
+      openGame({ ...game, tempo: newTotal })
+    }
+  }
+
+  function startEdit(session) {
+    setEditing(session.id)
+    setEditData({
+      session_date: session.session_date,
+      start_time: session.start_time?.slice(0, 5) || '',
+      end_time: session.end_time?.slice(0, 5) || '',
+      duration: session.duration,
+    })
+  }
+
+  async function handleEditSave(sessionId) {
+    // Recalculate duration if times changed
+    let newDuration = editData.duration
+    if (editData.start_time && editData.end_time) {
+      const [h1, m1] = editData.start_time.split(':').map(Number)
+      const [h2, m2] = editData.end_time.split(':').map(Number)
+      const totalMin = (h2 * 60 + m2) - (h1 * 60 + m1)
+      if (totalMin > 0) newDuration = Math.round((totalMin / 60) * 100) / 100
+    }
+
+    const { error } = await updateSession(sessionId, {
+      session_date: editData.session_date,
+      start_time: editData.start_time || null,
+      end_time: editData.end_time || null,
+      duration: newDuration,
+    })
+    if (!error) {
+      toast.success(t('sessions.updatedToast'))
+      setEditing(null)
+      await loadSessions()
+      // Recalculate total
+      const updated = sessions.map(s => s.id === sessionId ? { ...s, duration: newDuration } : s)
+      const newTotal = Math.round(updated.reduce((sum, s) => sum + (Number(s.duration) || 0), 0) * 100) / 100
+      await updateGame(game._id, { tempo: newTotal })
+      await reload()
+      openGame({ ...game, tempo: newTotal })
+    }
+  }
+
+  const inputCls = 'bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-white text-xs font-bold focus:outline-none focus:border-accent-cyan transition-colors w-full'
+
+  return (
+    <div className="bg-black/20 rounded-xl border border-white/5 overflow-hidden">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"
+      >
+        <div className="flex items-center gap-2 text-[0.7em] font-black uppercase tracking-wider text-dash-muted">
+          <History size={14} strokeWidth={2.5} />
+          {t('sessions.history')}
+          {sessions.length > 0 && (
+            <span className="text-accent-cyan font-bold normal-case">
+              ({t('sessions.sessionCount', { count: sessions.length })})
+            </span>
+          )}
+        </div>
+        {expanded ? <ChevronUp size={14} className="text-dash-muted" /> : <ChevronDown size={14} className="text-dash-muted" />}
+      </button>
+
+      {expanded && (
+        <div className="px-4 pb-4">
+          {loading ? (
+            <div className="flex justify-center py-4">
+              <div className="w-5 h-5 border-2 border-accent-cyan/30 border-t-accent-cyan rounded-full animate-spin" />
+            </div>
+          ) : sessions.length === 0 ? (
+            <p className="text-xs text-dash-muted text-center py-3">{t('sessions.noSessions')}</p>
+          ) : (
+            <>
+              {/* Header */}
+              <div className="grid grid-cols-[1fr_0.7fr_0.7fr_0.7fr_auto] gap-2 text-[0.6em] font-bold uppercase text-dash-muted mb-2 px-1">
+                <span>{t('sessions.date')}</span>
+                <span>{t('sessions.start')}</span>
+                <span>{t('sessions.end')}</span>
+                <span>{t('sessions.duration')}</span>
+                <span className="w-12" />
+              </div>
+              <div className="space-y-1 max-h-[200px] overflow-y-auto">
+                {sessions.map(s => (
+                  <div key={s.id}>
+                    {editing === s.id ? (
+                      <div className="grid grid-cols-[1fr_0.7fr_0.7fr_0.7fr_auto] gap-2 items-center bg-black/30 rounded-lg p-2 border border-accent-cyan/20">
+                        <input type="date" value={editData.session_date} onChange={e => setEditData({ ...editData, session_date: e.target.value })} className={inputCls} />
+                        <input type="time" value={editData.start_time} onChange={e => setEditData({ ...editData, start_time: e.target.value })} className={inputCls} />
+                        <input type="time" value={editData.end_time} onChange={e => setEditData({ ...editData, end_time: e.target.value })} className={inputCls} />
+                        <span className="text-xs font-bold text-center text-accent-cyan">{formatTime(editData.start_time && editData.end_time ? (() => { const [h1,m1]=editData.start_time.split(':').map(Number); const [h2,m2]=editData.end_time.split(':').map(Number); const min=(h2*60+m2)-(h1*60+m1); return min > 0 ? min/60 : editData.duration })() : editData.duration)}</span>
+                        <div className="flex gap-1">
+                          <button onClick={() => handleEditSave(s.id)} className="text-accent-success hover:text-white cursor-pointer text-xs font-black">✓</button>
+                          <button onClick={() => setEditing(null)} className="text-dash-muted hover:text-white cursor-pointer text-xs font-black">✕</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-[1fr_0.7fr_0.7fr_0.7fr_auto] gap-2 items-center text-xs font-bold text-white/80 bg-black/20 rounded-lg px-2 py-1.5 hover:bg-black/30 transition-colors">
+                        <span>{formatDateBR(s.session_date)}</span>
+                        <span className="text-dash-muted">{s.start_time?.slice(0, 5) || '—'}</span>
+                        <span className="text-dash-muted">{s.end_time?.slice(0, 5) || '—'}</span>
+                        <span className="text-accent-cyan">{formatTime(s.duration)}</span>
+                        <div className="flex gap-1">
+                          <button onClick={() => startEdit(s)} className="text-dash-muted hover:text-accent-cyan cursor-pointer"><Pencil size={12} /></button>
+                          <button onClick={() => handleDelete(s)} className="text-dash-muted hover:text-red-400 cursor-pointer"><Trash2 size={12} /></button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {/* Total */}
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
+                <span className="text-[0.65em] font-black uppercase text-dash-muted">{t('sessions.total')}: <span className="text-accent-cyan">{formatTime(totalFromSessions)}</span></span>
+                {Math.abs(totalFromSessions - parseTime(game.tempo)) > 0.02 && (
+                  <button onClick={recalcTempo} className="text-[0.6em] font-bold text-accent-gold hover:text-white cursor-pointer underline">
+                    {t('sessions.recalculated')}
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -259,11 +462,13 @@ function getGameStatus(game) {
 }
 
 export default function GameDetailModal() {
+  const { t } = useTranslation()
   const { selectedGame, closeGame } = useGameDetail()
   const modalRef = useRef(null)
   const touchStartY = useRef(0)
   const touchDeltaY = useRef(0)
   const [translateY, setTranslateY] = useState(0)
+  const [sessionKey, setSessionKey] = useState(0)
 
   useEffect(() => {
     if (selectedGame) {
@@ -317,9 +522,9 @@ export default function GameDetailModal() {
   const s = getConsoleStyle(game.console)
   const status = getGameStatus(game)
   const cfg = statusConfig[status] || statusConfig.backlog
-  const t = parseTime(game.tempo)
+  const played = parseTime(game.tempo)
   const h = parseFloat(game.hltb) || 0
-  const p = h > 0 ? Math.min(Math.round((t / h) * 100), 100) : 0
+  const p = h > 0 ? Math.min(Math.round((played / h) * 100), 100) : 0
   const onFire = status === 'jogando' && p >= 70
 
   return (
@@ -386,7 +591,7 @@ export default function GameDetailModal() {
                   className="inline-flex items-center gap-1 text-[0.65em] font-black uppercase px-2 py-0.5 rounded-full border"
                   style={{ color: cfg.color, borderColor: `${cfg.color}40`, background: `${cfg.color}15` }}
                 >
-                  {cfg.icon} {cfg.label}
+                  {cfg.icon} {t(cfg.label)}
                 </span>
                 <ConsoleBadge console={game.console} />
                 {onFire && (
@@ -411,14 +616,14 @@ export default function GameDetailModal() {
           <div className="flex flex-wrap gap-2 justify-center">
             <StatPill
               icon={<Clock size={12} strokeWidth={2.5} />}
-              label="Tempo"
-              value={formatTime(t)}
+              label={t('gameDetail.time')}
+              value={formatTime(played)}
               color={s.col}
             />
             {h > 0 && (
               <StatPill
                 icon={<Target size={12} strokeWidth={2.5} />}
-                label="HLTB"
+                label={t('gameDetail.hltb')}
                 value={`${h}h`}
                 color="#94a3b8"
               />
@@ -426,7 +631,7 @@ export default function GameDetailModal() {
             {game.nota != null && game.nota !== '' && (
               <StatPill
                 icon={<Star size={12} strokeWidth={2.5} />}
-                label="Nota"
+                label={t('gameDetail.rating')}
                 value={`${game.nota}/10`}
                 color={game.nota >= 9 ? '#ffcc00' : game.nota >= 7 ? '#00ff9f' : '#94a3b8'}
               />
@@ -434,14 +639,14 @@ export default function GameDetailModal() {
             {game.data_inicio && (
               <StatPill
                 icon={<Calendar size={12} strokeWidth={2.5} />}
-                label="Início"
+                label={t('gameDetail.startDate')}
                 value={formatDateBR(game.data_inicio)}
               />
             )}
             {game.data_zerado && (
               <StatPill
                 icon={<Calendar size={12} strokeWidth={2.5} />}
-                label="Zerado"
+                label={t('gameDetail.completedDate')}
                 value={formatDateBR(game.data_zerado)}
                 color="#00ff9f"
               />
@@ -456,7 +661,12 @@ export default function GameDetailModal() {
 
           {/* session logger — only for active games with _id */}
           {(status === 'jogando' || status === 'pausado') && (
-            <SessionLogger game={game} />
+            <SessionLogger game={game} onSessionAdded={() => setSessionKey(k => k + 1)} />
+          )}
+
+          {/* session history */}
+          {game._id && (
+            <SessionHistory key={sessionKey} game={game} />
           )}
         </div>
       </div>

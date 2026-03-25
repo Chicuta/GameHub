@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { getConsoleStyle, parseTime } from '../utils/helpers'
 import { useGameDetail } from '../contexts/GameDetailContext'
 import ConsoleBadge from './ConsoleBadge'
@@ -6,14 +7,16 @@ import SectionTitle from './SectionTitle'
 import HltbBar from './HltbBar'
 import { Library, Search, Filter, SlidersHorizontal, Dices, ChevronDown } from 'lucide-react'
 
-const SORT_OPTIONS = [
-  { value: 'nome', label: 'Nome' },
-  { value: 'console', label: 'Plataforma' },
-  { value: 'hltb-asc', label: 'HLTB ↑' },
-  { value: 'hltb-desc', label: 'HLTB ↓' },
-]
+const SORT_OPTIONS = ['nome', 'console', 'hltb-asc', 'hltb-desc']
+const SORT_LABEL_KEYS = {
+  'nome': 'backlog.sortName',
+  'console': 'backlog.sortPlatform',
+  'hltb-asc': 'backlog.sortHltbAsc',
+  'hltb-desc': 'backlog.sortHltbDesc',
+}
 
 function BacklogCard({ game }) {
+  const { t } = useTranslation()
   const { openGame } = useGameDetail()
   const h = parseFloat(game.hltb) || 0
   const s = getConsoleStyle(game.console)
@@ -27,7 +30,7 @@ function BacklogCard({ game }) {
         {game.capa ? (
           <img src={game.capa} alt={game.nome} className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300" />
         ) : (
-          <Library size={28} className="text-dash-muted" />
+          <span title={t('common.noCover')}><Library size={28} className="text-dash-muted" /></span>
         )}
         {h > 0 && (
           <div className="absolute bottom-1.5 left-1.5 right-1.5">
@@ -44,6 +47,7 @@ function BacklogCard({ game }) {
 }
 
 function RouletteResult({ game, onClose }) {
+  const { t } = useTranslation()
   const { openGame } = useGameDetail()
   const s = getConsoleStyle(game.console)
 
@@ -58,7 +62,7 @@ function RouletteResult({ game, onClose }) {
         />
       )}
       <div className="flex-1 min-w-0">
-        <div className="text-[0.65em] font-bold uppercase tracking-wider text-accent-gold mb-1">🎲 Jogo Sorteado!</div>
+        <div className="text-[0.65em] font-bold uppercase tracking-wider text-accent-gold mb-1">{t('backlog.shuffleResult')}</div>
         <div className="font-heading font-black text-white text-lg truncate">{game.nome}</div>
         <ConsoleBadge console={game.console} />
       </div>
@@ -71,6 +75,7 @@ function RouletteResult({ game, onClose }) {
 }
 
 export default function BacklogBrowser({ backlog }) {
+  const { t } = useTranslation()
   const [search, setSearch] = useState('')
   const [platformFilter, setPlatformFilter] = useState('')
   const [genreFilter, setGenreFilter] = useState('')
@@ -133,7 +138,7 @@ export default function BacklogBrowser({ backlog }) {
   return (
     <div className="mb-8">
       <SectionTitle icon={<Library size={22} strokeWidth={2.5} className="text-accent-gold" />}>
-        BACKLOG ({backlog.length})
+        {t('backlog.title', { count: backlog.length })}
       </SectionTitle>
 
       {/* toolbar */}
@@ -144,7 +149,7 @@ export default function BacklogBrowser({ backlog }) {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar no backlog..."
+            placeholder={t('backlog.searchPlaceholder')}
             className="w-full bg-black/40 border border-white/10 rounded-lg pl-8 pr-3 py-1.5 text-white text-sm focus:outline-none focus:border-accent-cyan transition-colors"
           />
         </div>
@@ -170,7 +175,7 @@ export default function BacklogBrowser({ backlog }) {
           onClick={handleRoulette}
           className="flex items-center gap-1 text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg border border-accent-gold/30 text-accent-gold hover:bg-accent-gold/10 transition-colors cursor-pointer"
         >
-          <Dices size={14} strokeWidth={2.5} /> Sortear
+          <Dices size={14} strokeWidth={2.5} /> {t('backlog.shuffle')}
         </button>
       </div>
 
@@ -178,23 +183,23 @@ export default function BacklogBrowser({ backlog }) {
       {showFilters && (
         <div className="flex flex-wrap gap-2 mb-4 p-3 bg-black/20 rounded-xl border border-white/5">
           <div>
-            <label className="block text-[0.6em] font-bold uppercase text-dash-muted mb-1">Plataforma</label>
+            <label className="block text-[0.6em] font-bold uppercase text-dash-muted mb-1">{t('backlog.platform')}</label>
             <select value={platformFilter} onChange={e => setPlatformFilter(e.target.value)} className={selectCls}>
-              <option value="">Todas</option>
+              <option value="">{t('common.allFem')}</option>
               {platforms.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-[0.6em] font-bold uppercase text-dash-muted mb-1">Gênero</label>
+            <label className="block text-[0.6em] font-bold uppercase text-dash-muted mb-1">{t('backlog.genre')}</label>
             <select value={genreFilter} onChange={e => setGenreFilter(e.target.value)} className={selectCls}>
-              <option value="">Todos</option>
-              {genres.map(g => <option key={g} value={g}>{g}</option>)}
+              <option value="">{t('common.all')}</option>
+              {genres.map(g => <option key={g} value={g}>{t('genres.' + g, g)}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-[0.6em] font-bold uppercase text-dash-muted mb-1">Ordenar</label>
+            <label className="block text-[0.6em] font-bold uppercase text-dash-muted mb-1">{t('backlog.sort')}</label>
             <select value={sort} onChange={e => setSort(e.target.value)} className={selectCls}>
-              {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              {SORT_OPTIONS.map(v => <option key={v} value={v}>{t(SORT_LABEL_KEYS[v])}</option>)}
             </select>
           </div>
           {(platformFilter || genreFilter) && (
@@ -202,7 +207,7 @@ export default function BacklogBrowser({ backlog }) {
               onClick={() => { setPlatformFilter(''); setGenreFilter('') }}
               className="self-end text-[0.65em] font-bold text-accent-danger hover:underline cursor-pointer pb-1.5"
             >
-              Limpar filtros
+              {t('backlog.clearFilters')}
             </button>
           )}
         </div>
@@ -214,7 +219,7 @@ export default function BacklogBrowser({ backlog }) {
       {/* results count */}
       {search || platformFilter || genreFilter ? (
         <div className="text-xs text-dash-muted font-bold mb-3">
-          {filtered.length} jogo{filtered.length !== 1 ? 's' : ''} encontrado{filtered.length !== 1 ? 's' : ''}
+          {t('backlog.resultCount', { count: filtered.length })}
         </div>
       ) : null}
 
@@ -225,7 +230,7 @@ export default function BacklogBrowser({ backlog }) {
 
       {filtered.length === 0 && (
         <div className="text-center text-dash-muted py-12 text-sm">
-          Nenhum jogo encontrado com os filtros atuais.
+          {t('backlog.emptyFiltered')}
         </div>
       )}
     </div>

@@ -2,8 +2,10 @@ import { useMemo } from 'react'
 import { getConsoleStyle } from '../utils/helpers'
 import Accordion from './Accordion'
 import { Scale } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export default function BacklogByPlatform({ backlog }) {
+  const { t } = useTranslation()
   const rows = useMemo(() => {
     const stats = {}
     backlog.forEach(t => {
@@ -22,7 +24,7 @@ export default function BacklogByPlatform({ backlog }) {
   if (rows.length === 0) return null
 
   return (
-    <Accordion title="BACKLOG POR PLATAFORMA" color="#ffd700" icon={<Scale size={18} strokeWidth={2.5} />}>
+    <Accordion title={t('backlogByPlatform.title')} color="#ffd700" icon={<Scale size={18} strokeWidth={2.5} />}>
       <div className="pt-3">
         {rows.map(r => {
           const pend = r.total - r.done

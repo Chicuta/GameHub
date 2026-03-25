@@ -1,12 +1,9 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { parseTime, formatTime, getConsoleStyle } from '../utils/helpers'
 import Accordion from './Accordion'
 import ConsoleBadge from './ConsoleBadge'
 import { Calendar, Flame, Clock } from 'lucide-react'
-
-const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
-const MESES_FULL = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro']
-const DIAS = ['D','S','T','Q','Q','S','S']
 
 function getColorHM(count) {
   if (!count) return 'rgba(255,255,255,0.04)'
@@ -16,8 +13,12 @@ function getColorHM(count) {
 }
 
 export default function ActivityHeatmap({ zerados }) {
+  const { t } = useTranslation()
   const ANO = new Date().getFullYear()
   const hoje = new Date().toISOString().split('T')[0]
+  const MESES = t('heatmap.months', { returnObjects: true })
+  const MESES_FULL = t('heatmap.monthsFull', { returnObjects: true })
+  const DIAS = t('heatmap.days', { returnObjects: true })
 
   const { mapaJogos, mapaAtividade, temDataReal } = useMemo(() => {
     const mj = {}
@@ -105,17 +106,17 @@ export default function ActivityHeatmap({ zerados }) {
   const mesAtualNome = MESES_FULL[new Date().getMonth()]
 
   return (
-    <Accordion title={`CALENDÁRIO DE ATIVIDADE ${ANO}`} color="#00f5ff" icon={<Calendar size={18} strokeWidth={2.5} />}>
+    <Accordion title={t('heatmap.title', { year: ANO })} color="#00f5ff" icon={<Calendar size={18} strokeWidth={2.5} />}>
       <div className="pt-3">
         {/* Stats row */}
         <div className="flex flex-wrap gap-2.5 mb-4">
           {[
-            { val: stats.jogosAno, label: `jogos em ${ANO}`, color: '#00ff87' },
-            { val: temDataReal ? stats.diasAtivos : '—', label: 'dias ativos', color: '#00f5ff' },
-            { val: stats.melhorDia ? stats.melhorDia[1] : '—', label: 'recorde/dia', color: '#ffcc00' },
-            { val: stats.streak > 0 ? `${stats.streak}★` : '0', label: 'streak atual', color: '#f472b6' },
-            { val: stats.mediaAno, label: 'nota média', color: '#bc13fe' },
-            { val: formatTime(stats.horasAno), label: `horas em ${ANO}`, color: '#818cf8' },
+            { val: stats.jogosAno, label: t('heatmap.gamesInYear', { year: ANO }), color: '#00ff87' },
+            { val: temDataReal ? stats.diasAtivos : '—', label: t('heatmap.activeDays'), color: '#00f5ff' },
+            { val: stats.melhorDia ? stats.melhorDia[1] : '—', label: t('heatmap.recordPerDay'), color: '#ffcc00' },
+            { val: stats.streak > 0 ? `${stats.streak}★` : '0', label: t('heatmap.currentStreak'), color: '#f472b6' },
+            { val: stats.mediaAno, label: t('heatmap.avgRating'), color: '#bc13fe' },
+            { val: formatTime(stats.horasAno), label: t('heatmap.hoursInYear', { year: ANO }), color: '#818cf8' },
           ].map((s, i) => (
             <div key={i} className="bg-black/30 border border-white/5 rounded-lg px-3.5 py-2 text-center min-w-[70px]">
               <span className="font-heading text-xl font-bold block" style={{ color: s.color }}>{s.val}</span>
@@ -150,7 +151,7 @@ export default function ActivityHeatmap({ zerados }) {
                       const count = jogos.length
                       const isHoje = key === hoje
                       const tooltip = count === 0
-                        ? `${dia.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}: nenhum`
+                        ? `${dia.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}: ${t('heatmap.none')}`
                         : `${dia.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}: ${jogos.map(j => j.nome).join(', ')}`
                       return (
                         <div
@@ -170,16 +171,16 @@ export default function ActivityHeatmap({ zerados }) {
 
         {/* Legend */}
         <div className="flex items-center gap-1.5 mt-2.5 justify-end">
-          <span className="text-[0.6em] font-bold text-[#475569] uppercase tracking-wider">menos</span>
+          <span className="text-[0.6em] font-bold text-[#475569] uppercase tracking-wider">{t('heatmap.less')}</span>
           {['rgba(255,255,255,0.04)', 'rgba(0,255,135,0.35)', 'rgba(0,255,135,0.6)', '#00ff87'].map((c, i) => (
             <div key={i} className="w-[11px] h-[11px] rounded-sm inline-block" style={{ background: c }} />
           ))}
-          <span className="text-[0.6em] font-bold text-[#475569] uppercase tracking-wider">mais</span>
+          <span className="text-[0.6em] font-bold text-[#475569] uppercase tracking-wider">{t('heatmap.more')}</span>
         </div>
 
         {/* Monthly list */}
         <div className="h-px bg-white/5 my-4" />
-        <div className="font-heading text-sm font-black uppercase tracking-[2px] text-dash-muted mb-2.5 flex items-center gap-1"><Calendar size={14} strokeWidth={2.5} /> Zerados em {mesAtualNome}</div>
+        <div className="font-heading text-sm font-black uppercase tracking-[2px] text-dash-muted mb-2.5 flex items-center gap-1"><Calendar size={14} strokeWidth={2.5} /> {t('heatmap.completedInMonth', { month: mesAtualNome })}</div>
         {jogosDoMes.length > 0 ? jogosDoMes.map(g => {
           const s = getConsoleStyle(g.console)
           const nota = g.nota != null ? g.nota : '—'
@@ -202,7 +203,7 @@ export default function ActivityHeatmap({ zerados }) {
             </div>
           )
         }) : (
-          <div className="text-[0.75em] text-[#475569] py-2">Nenhum jogo zerado em {mesAtualNome}.</div>
+          <div className="text-[0.75em] text-[#475569] py-2">{t('heatmap.noCompletedInMonth', { month: mesAtualNome })}</div>
         )}
       </div>
     </Accordion>

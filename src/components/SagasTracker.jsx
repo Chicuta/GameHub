@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { getConsoleStyle } from '../utils/helpers'
 import { useGameDetail } from '../contexts/GameDetailContext'
 import { useAuth } from '../contexts/AuthContext'
@@ -38,6 +39,7 @@ function SagaProgress({ done, total, color }) {
 
 /* ── Game Mini Card ────────────────────────────── */
 function GameMiniCard({ game, onToggle, onRemove }) {
+  const { t } = useTranslation()
   const { openGame } = useGameDetail()
   const { user } = useAuth()
   const s = getConsoleStyle(game.console)
@@ -67,7 +69,7 @@ function GameMiniCard({ game, onToggle, onRemove }) {
       .eq('id', game.id)
     if (!error) {
       onToggle(game.id, newDone)
-      toast.success(newDone ? `${game.nome} concluído!` : `${game.nome} desmarcado`)
+      toast.success(newDone ? t('sagas.markedDone', { name: game.nome }) : t('sagas.unmarked', { name: game.nome }))
     }
     setToggling(false)
   }
@@ -129,6 +131,7 @@ function GameMiniCard({ game, onToggle, onRemove }) {
 
 /* ── Add Game to Saga (search from DB) ─────────── */
 function AddGameToSaga({ sagaId, onAdded }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
@@ -170,12 +173,12 @@ function AddGameToSaga({ sagaId, onAdded }) {
       .select()
       .single()
     if (!error && data) {
-      toast.success(`${game.nome} adicionado à saga!`)
+      toast.success(t('sagas.addedToSaga', { name: game.nome }))
       onAdded(data)
       setQuery('')
       setResults([])
     } else {
-      toast.error('Erro ao adicionar')
+      toast.error(t('sagas.addError'))
     }
     setAdding(null)
   }
@@ -183,7 +186,7 @@ function AddGameToSaga({ sagaId, onAdded }) {
   if (!open) {
     return (
       <button onClick={() => setOpen(true)} className="flex items-center gap-1 text-xs text-accent-cyan hover:text-white transition-colors cursor-pointer mt-2">
-        <Plus size={14} strokeWidth={2.5} /> Adicionar jogo
+        <Plus size={14} strokeWidth={2.5} /> {t('sagas.addGame')}
       </button>
     )
   }
@@ -191,14 +194,14 @@ function AddGameToSaga({ sagaId, onAdded }) {
   return (
     <div className="mt-3 bg-black/30 rounded-lg border border-white/5 p-3">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-bold uppercase tracking-wider text-dash-muted">Buscar jogo no catálogo</span>
+        <span className="text-xs font-bold uppercase tracking-wider text-dash-muted">{t('sagas.searchCatalog')}</span>
         <button onClick={() => { setOpen(false); setQuery(''); setResults([]) }} className="text-dash-muted hover:text-white cursor-pointer"><X size={14} /></button>
       </div>
       <input
         type="text"
         value={query}
         onChange={e => setQuery(e.target.value)}
-        placeholder="Ex: Mega Man X, Castlevania..."
+        placeholder={t('sagas.searchPlaceholder')}
         autoFocus
         className={inputCls}
       />
@@ -230,6 +233,7 @@ function AddGameToSaga({ sagaId, onAdded }) {
 
 /* ── Saga Card ─────────────────────────────────── */
 function SagaCard({ saga, onToggleGame, onRemoveGame, onAddGame, onDeleteSaga, onEditSaga }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const { user } = useAuth()
   const done = saga.games.filter(g => g.done).length
@@ -266,8 +270,8 @@ function SagaCard({ saga, onToggleGame, onRemoveGame, onAddGame, onDeleteSaga, o
               <SagaProgress done={done} total={total} color={accentColor} />
             </div>
             <div className="flex gap-2 text-[0.6em] font-bold text-dash-muted">
-              {totalHltb > 0 && <span>{totalHltb.toFixed(0)}h total</span>}
-              <span>{done}/{total} jogos</span>
+              {totalHltb > 0 && <span>{t('sagas.totalHours', { hours: totalHltb.toFixed(0) })}</span>}
+              <span>{t('sagas.gamesCount', { done, total })}</span>
             </div>
           </div>
         </div>
@@ -278,11 +282,11 @@ function SagaCard({ saga, onToggleGame, onRemoveGame, onAddGame, onDeleteSaga, o
         <div className="px-4 pb-4 border-t border-white/5">
           <div className="flex flex-wrap items-center gap-2 py-3">
             <span className="text-[0.6em] font-black px-2 py-1 rounded-full border" style={{ color: accentColor, borderColor: `${accentColor}40`, background: `${accentColor}10` }}>
-              {pct}% completo
+              {pct}{t('sagas.percentComplete')}
             </span>
             {totalHltb > 0 && (
               <span className="text-[0.6em] font-black px-2 py-1 rounded-full border border-white/10 text-dash-muted bg-white/5">
-                {doneHltb.toFixed(0)}h / {totalHltb.toFixed(0)}h jogadas
+                {t('sagas.hoursPlayed', { done: doneHltb.toFixed(0), total: totalHltb.toFixed(0) })}
               </span>
             )}
             {user && (
@@ -299,7 +303,7 @@ function SagaCard({ saga, onToggleGame, onRemoveGame, onAddGame, onDeleteSaga, o
 
           {saga.games.length === 0 ? (
             <div className="text-center text-dash-muted text-xs py-6">
-              Nenhum jogo nesta saga. Adicione jogos do catálogo!
+              {t('sagas.emptyState')}
             </div>
           ) : (
             consoleGroups.map(([consoleName, games]) => {
@@ -336,6 +340,7 @@ function SagaCard({ saga, onToggleGame, onRemoveGame, onAddGame, onDeleteSaga, o
 
 /* ── Create / Edit Saga Modal ──────────────────── */
 function SagaFormModal({ saga, onClose, onSaved }) {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [nome, setNome] = useState(saga?.nome || '')
   const [emoji, setEmoji] = useState(saga?.emoji || '🎮')
@@ -343,7 +348,7 @@ function SagaFormModal({ saga, onClose, onSaved }) {
 
   async function handleSave(e) {
     e.preventDefault()
-    if (!nome.trim()) { toast.error('Nome é obrigatório'); return }
+    if (!nome.trim()) { toast.error(t('sagas.nameRequired')); return }
     setSaving(true)
     if (saga) {
       const { error } = await supabase
@@ -351,7 +356,7 @@ function SagaFormModal({ saga, onClose, onSaved }) {
         .update({ nome: nome.trim(), emoji })
         .eq('id', saga.id)
       if (error) toast.error(error.message)
-      else { toast.success('Saga atualizada!'); onSaved() }
+      else { toast.success(t('sagas.updated')); onSaved() }
     } else {
       const { data, error } = await supabase
         .from('user_sagas')
@@ -359,7 +364,7 @@ function SagaFormModal({ saga, onClose, onSaved }) {
         .select()
         .single()
       if (error) toast.error(error.message)
-      else { toast.success('Saga criada!'); onSaved(data) }
+      else { toast.success(t('sagas.created')); onSaved(data) }
     }
     setSaving(false)
   }
@@ -370,23 +375,23 @@ function SagaFormModal({ saga, onClose, onSaved }) {
       <div className="relative bg-dash-surface border border-dash-border rounded-2xl max-w-sm w-full p-5" onClick={e => e.stopPropagation()}>
         <button onClick={onClose} className="absolute top-3 right-3 text-dash-muted hover:text-white cursor-pointer"><X size={18} /></button>
         <h3 className="font-heading font-black text-white uppercase tracking-wider text-sm mb-4">
-          {saga ? 'Editar Saga' : 'Nova Saga'}
+          {saga ? t('sagas.editSaga') : t('sagas.newSaga')}
         </h3>
         <form onSubmit={handleSave} className="space-y-3">
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-dash-muted mb-1">Nome</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-dash-muted mb-1">{t('sagas.name')}</label>
             <input type="text" value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex: Castlevania" autoFocus className={inputCls} />
           </div>
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-dash-muted mb-1">Emoji</label>
+            <label className="block text-xs font-bold uppercase tracking-wider text-dash-muted mb-1">{t('sagas.emoji')}</label>
             <input type="text" value={emoji} onChange={e => setEmoji(e.target.value)} placeholder="🎮" className={`${inputCls} w-20 text-center text-xl`} />
           </div>
           <div className="flex gap-2 pt-2">
             <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-lg font-heading font-black uppercase tracking-wider text-sm bg-gradient-to-r from-accent-cyan to-accent-purple text-dash-bg hover:shadow-[0_0_20px_rgba(0,245,255,0.3)] transition-all disabled:opacity-50 cursor-pointer">
-              {saving ? 'Salvando...' : saga ? 'Salvar' : 'Criar Saga'}
+              {saving ? 'Salvando...' : saga ? t('common.save') : t('sagas.createSaga')}
             </button>
             <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-lg border border-white/10 text-dash-muted text-sm hover:bg-white/5 transition-colors cursor-pointer">
-              Cancelar
+              {t('common.cancel')}
             </button>
           </div>
         </form>
@@ -397,6 +402,7 @@ function SagaFormModal({ saga, onClose, onSaved }) {
 
 /* ── Main Component ────────────────────────────── */
 export default function SagasTracker() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [sagas, setSagas] = useState([])
   const [loading, setLoading] = useState(true)
@@ -450,7 +456,7 @@ export default function SagasTracker() {
     const { error } = await supabase.from('user_sagas').delete().eq('id', sagaId)
     if (!error) {
       setSagas(prev => prev.filter(s => s.id !== sagaId))
-      toast.success('Saga deletada')
+      toast.success(t('sagas.deleted'))
     }
   }, [])
 
@@ -479,7 +485,7 @@ export default function SagasTracker() {
   return (
     <div className="mb-8">
       <SectionTitle icon={<Swords size={22} strokeWidth={2.5} className="text-accent-purple" />}>
-        SAGAS ({totalDone}/{totalGames})
+        {t('sagas.title', { done: totalDone, total: totalGames })}
       </SectionTitle>
 
       {loading ? (
@@ -491,8 +497,8 @@ export default function SagasTracker() {
           {sorted.length === 0 && (
             <div className="text-center py-10 text-dash-muted">
               <Swords size={36} className="mx-auto mb-3 opacity-30" />
-              <p className="text-sm mb-1">Nenhuma saga criada ainda.</p>
-              <p className="text-xs">Crie uma saga para acompanhar séries de jogos!</p>
+              <p className="text-sm mb-1">{t('sagas.noSagas')}</p>
+              <p className="text-xs">{t('sagas.hint')}</p>
             </div>
           )}
           <div className="space-y-3">
@@ -513,7 +519,7 @@ export default function SagasTracker() {
             onClick={() => setShowForm(true)}
             className="mt-4 w-full py-3 rounded-xl border-2 border-dashed border-accent-purple/30 text-accent-purple font-heading font-black uppercase tracking-wider text-sm hover:bg-accent-purple/5 hover:border-accent-purple/50 transition-all cursor-pointer"
           >
-            <Plus size={16} className="inline-block align-[-0.15em] mr-1" /> CRIAR NOVA SAGA
+            <Plus size={16} className="inline-block align-[-0.15em] mr-1" /> {t('sagas.createNewSaga')}
           </button>
         </>
       )}

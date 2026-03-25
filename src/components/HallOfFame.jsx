@@ -3,8 +3,10 @@ import { parseTime } from '../utils/helpers'
 import { useGameDetail } from '../contexts/GameDetailContext'
 import SectionTitle from './SectionTitle'
 import { Trophy, Medal, Crown, Calendar } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 function PosterCard({ game, isGoty, isFame }) {
+  const { t } = useTranslation()
   const { openGame } = useGameDetail()
   return (
     <div
@@ -20,7 +22,7 @@ function PosterCard({ game, isGoty, isFame }) {
       {isGoty && (
         <>
           <div className="absolute top-1.5 left-1.5 z-10 bg-gradient-to-br from-accent-gold to-orange-500 text-[#1a0e00] font-heading font-black text-[0.58em] tracking-wider uppercase px-1.5 py-0.5 rounded shadow-[0_2px_8px_rgba(255,160,0,0.5)]">
-                        <Medal size={10} strokeWidth={2.5} className="inline-block align-[-0.1em]" /> GOTY
+                        <Medal size={10} strokeWidth={2.5} className="inline-block align-[-0.1em]" /> {t('hallOfFame.goty')}
           </div>
           <div className="absolute inset-0 w-[40%] h-full bg-gradient-to-r from-transparent via-yellow-200/15 to-transparent animate-shine-swipe z-[2] pointer-events-none" />
         </>
@@ -39,6 +41,7 @@ function PosterCard({ game, isGoty, isFame }) {
 }
 
 export default function HallOfFame({ zerados }) {
+  const { t } = useTranslation()
   const fameGames = useMemo(() => zerados.filter(g => g.nota === 10), [zerados])
   const fameAnos = useMemo(() =>
     [...new Set(fameGames.map(g => g.ano_zerado).filter(Boolean))].sort((a, b) => b - a),
@@ -60,7 +63,7 @@ export default function HallOfFame({ zerados }) {
 
   return (
     <div className="mb-8">
-      <SectionTitle icon={<Trophy size={22} strokeWidth={2.5} className="text-accent-gold" />}>HALL DA FAMA</SectionTitle>
+      <SectionTitle icon={<Trophy size={22} strokeWidth={2.5} className="text-accent-gold" />}>{t('hallOfFame.title')}</SectionTitle>
       {fameAnos.map(ano => {
         const gAno = fameGames.filter(g => g.ano_zerado === ano)
         const gotyNome = getGotyDoAno(ano)

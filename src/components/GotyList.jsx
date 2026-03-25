@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { fetchGotyByYear } from '../lib/gamesApi'
 import { Trophy, Star, Crown } from 'lucide-react'
 
@@ -47,6 +48,7 @@ function GotyCard({ game, rank }) {
 }
 
 export default function GotyList() {
+  const { t } = useTranslation()
   const [gotyData, setGotyData] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -66,8 +68,8 @@ export default function GotyList() {
           <Trophy size={20} className="text-yellow-400" strokeWidth={2.5} />
         </div>
         <div>
-          <h2 className="font-heading font-black uppercase tracking-wider text-lg text-white">GOTY</h2>
-          <p className="text-dash-muted text-xs">Os melhores jogos dos últimos anos</p>
+          <h2 className="font-heading font-black uppercase tracking-wider text-lg text-white">{t('goty.title')}</h2>
+          <p className="text-dash-muted text-xs">{t('goty.subtitle')}</p>
         </div>
       </div>
 
