@@ -547,7 +547,7 @@ function CatalogModal({ game, onClose }) {
               </div>
               <div>
                 <label className={labelCls}>Horas Jogadas</label>
-                <input type="number" min="0" step="0.5" value={form.tempo} onChange={e => setForm(f => ({ ...f, tempo: e.target.value }))} placeholder="0" className={inputCls} />
+                <input type="number" min="0" step="0.01" value={form.tempo} onChange={e => setForm(f => ({ ...f, tempo: e.target.value }))} placeholder="0" className={inputCls} />
               </div>
               {form.status === 'jogado' && (
                 <div>

@@ -178,11 +178,11 @@ function EditForm({ game, onSave, onCancel, onDelete }) {
         </div>
         <div>
           <label className={labelCls}>Horas Jogadas</label>
-          <input type="number" min="0" step="0.5" value={form.tempo} onChange={e => setForm(f => ({ ...f, tempo: e.target.value }))} placeholder="0" className={inputCls} />
+          <input type="number" min="0" step="0.01" value={form.tempo} onChange={e => setForm(f => ({ ...f, tempo: e.target.value }))} placeholder="0" className={inputCls} />
         </div>
         <div>
           <label className={labelCls}>HLTB (horas)</label>
-          <input type="number" min="0" step="0.5" value={form.hltb} onChange={e => setForm(f => ({ ...f, hltb: e.target.value }))} placeholder="—" className={inputCls} />
+          <input type="number" min="0" step="0.01" value={form.hltb} onChange={e => setForm(f => ({ ...f, hltb: e.target.value }))} placeholder="—" className={inputCls} />
         </div>
         {isZerado && (
           <div>

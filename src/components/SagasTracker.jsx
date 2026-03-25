@@ -55,6 +55,7 @@ function GameMiniCard({ game, onToggle, onRemove }) {
       genero: '',
       nota: null,
       _status: game.done ? 'zerado' : 'backlog',
+      _sagaGameId: game.id,
     })
   }
 

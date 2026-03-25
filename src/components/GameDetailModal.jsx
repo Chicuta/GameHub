@@ -5,6 +5,7 @@ import { useUserGames } from '../contexts/UserGamesContext'
 import { useAuth } from '../contexts/AuthContext'
 import { parseTime, formatTime, getConsoleStyle, daysBetween, todayStr, formatDateBR } from '../utils/helpers'
 import { fetchSessions, createSession, updateSession, deleteSession } from '../lib/gamesApi'
+import { supabase } from '../lib/supabase'
 import ConsoleBadge from './ConsoleBadge'
 import { X, Clock, Target, Calendar, Star, Flame, TrendingUp, Gamepad2, Plus, Timer, Trophy, Pencil, Trash2, History, ChevronDown, ChevronUp } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -148,6 +149,15 @@ function PlatformEditor({ game, status }) {
         await reload()
         openGame({ ...game, console: newConsole })
       }
+    } else if (game._sagaGameId) {
+      const { error } = await supabase
+        .from('user_saga_games')
+        .update({ console: newConsole })
+        .eq('id', game._sagaGameId)
+      if (!error) {
+        toast.success(t('gameDetail.platformChanged'))
+        openGame({ ...game, console: newConsole })
+      }
     } else {
       openGame({ ...game, console: newConsole })
     }
@@ -182,7 +192,7 @@ function PlatformEditor({ game, status }) {
       title={t('gameDetail.changePlatform')}
     >
       <ConsoleBadge console={game.console} />
-      <Pencil size={10} strokeWidth={2.5} className="text-dash-muted opacity-0 group-hover:opacity-100 transition-opacity" />
+      <Pencil size={10} strokeWidth={2.5} className="text-accent-cyan/70 group-hover:text-accent-cyan transition-colors" />
     </button>
   )
 }
@@ -714,11 +724,7 @@ export default function GameDetailModal() {
                 >
                   {cfg.icon} {t(cfg.label)}
                 </span>
-                {(status === 'backlog') ? (
-                  <PlatformEditor game={game} status={status} />
-                ) : (
-                  <ConsoleBadge console={game.console} />
-                )}
+                <PlatformEditor game={game} status={status} />
                 {onFire && (
                   <span className="inline-flex items-center gap-0.5 text-[0.65em] font-black text-orange-500 bg-orange-500/10 border border-orange-500/25 px-2 py-0.5 rounded-full">
                     <Flame size={12} strokeWidth={2.5} className="animate-flame" /> ON FIRE
@@ -794,8 +800,8 @@ export default function GameDetailModal() {
             <SessionHistory key={sessionKey} game={game} />
           )}
 
-          {/* remove from backlog */}
-          {status === 'backlog' && game._id && (
+          {/* remove game */}
+          {game._id && (
             <RemoveFromBacklog game={game} />
           )}
         </div>

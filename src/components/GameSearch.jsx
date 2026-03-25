@@ -348,6 +348,11 @@ function ManualForm({ user, onDone }) {
     nome: '', console: '', genero: '', capa: '',
     status: 'jogando', nota: '', tempo: '', hltb: '', anoJogado: '',
   })
+  const [customConsole, setCustomConsole] = useState('')
+  const [customGenero, setCustomGenero] = useState('')
+
+  const resolvedConsole = form.console === 'Outro' ? customConsole.trim() : form.console
+  const resolvedGenero = form.genero === 'Outro' ? customGenero.trim() : form.genero
 
   async function handleAdd(e) {
     e.preventDefault()
@@ -367,8 +372,8 @@ function ManualForm({ user, onDone }) {
           nome: form.nome.trim(),
           slug: form.nome.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'),
           capa: capaUrl,
-          generos: form.genero ? [form.genero] : [],
-          plataformas: form.console ? [form.console] : [],
+          generos: resolvedGenero ? [resolvedGenero] : [],
+          plataformas: resolvedConsole ? [resolvedConsole] : [],
         })
         .select('id')
         .single()
@@ -382,7 +387,7 @@ function ManualForm({ user, onDone }) {
         user_id: user.id,
         game_id: gameRow.id,
         status: dbStatus,
-        console: form.console || null,
+        console: resolvedConsole || null,
         nota: form.nota ? parseInt(form.nota) : null,
         tempo: form.tempo ? parseFloat(form.tempo) : 0,
         hltb: form.hltb ? parseFloat(form.hltb) : null,
@@ -418,17 +423,25 @@ function ManualForm({ user, onDone }) {
       <div className="grid grid-cols-2 gap-3 mb-3">
         <div>
           <label className={labelCls}>{t('gameSearch.platform')}</label>
-          <select value={form.console} onChange={e => setForm(f => ({ ...f, console: e.target.value }))} className={inputCls}>
+          <select value={form.console} onChange={e => { setForm(f => ({ ...f, console: e.target.value })); if (e.target.value !== 'Outro') setCustomConsole('') }} className={inputCls}>
             <option value="">{t('common.select')}</option>
             {PLATFORM_LIST.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
+          {form.console === 'Outro' && (
+            <input type="text" value={customConsole} onChange={e => setCustomConsole(e.target.value)}
+              placeholder={t('gameSearch.customPlatform')} className={inputCls + ' mt-2'} maxLength={100} autoFocus />
+          )}
         </div>
         <div>
           <label className={labelCls}>{t('gameSearch.genre')}</label>
-          <select value={form.genero} onChange={e => setForm(f => ({ ...f, genero: e.target.value }))} className={inputCls}>
+          <select value={form.genero} onChange={e => { setForm(f => ({ ...f, genero: e.target.value })); if (e.target.value !== 'Outro') setCustomGenero('') }} className={inputCls}>
             <option value="">{t('common.select')}</option>
             {GENRE_LIST.map(g => <option key={g} value={g}>{t('genres.' + g)}</option>)}
           </select>
+          {form.genero === 'Outro' && (
+            <input type="text" value={customGenero} onChange={e => setCustomGenero(e.target.value)}
+              placeholder={t('gameSearch.customGenre')} className={inputCls + ' mt-2'} maxLength={100} />
+          )}
         </div>
       </div>
 
@@ -472,12 +485,12 @@ function CollectionFields({ form, setForm, platforms, showHltb = true }) {
       </div>
       <div>
         <label className={labelCls}>{t('gameSearch.hoursPlayed')}</label>
-        <input type="number" min="0" step="0.5" value={form.tempo} onChange={e => setForm(f => ({ ...f, tempo: e.target.value }))} placeholder="0" className={inputCls} />
+        <input type="number" min="0" step="0.01" value={form.tempo} onChange={e => setForm(f => ({ ...f, tempo: e.target.value }))} placeholder="0" className={inputCls} />
       </div>
       {showHltb && (
         <div>
           <label className={labelCls}>{t('gameSearch.hltbHours')}</label>
-          <input type="number" min="0" step="0.5" value={form.hltb} onChange={e => setForm(f => ({ ...f, hltb: e.target.value }))} placeholder="Estimado" className={inputCls} />
+          <input type="number" min="0" step="0.01" value={form.hltb} onChange={e => setForm(f => ({ ...f, hltb: e.target.value }))} placeholder="Estimado" className={inputCls} />
         </div>
       )}
       {form.status === 'jogado' && (
