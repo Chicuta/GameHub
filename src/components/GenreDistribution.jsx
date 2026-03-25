@@ -66,8 +66,8 @@ export default function GenreDistribution({ zerados, jogando, abandonados, backl
           const col = getGenreColor(r.name)
           const pctZerado = r.total > 0 ? Math.round((r.zerados / r.total) * 100) : 0
           return (
-            <div key={r.name} className="flex items-center gap-2.5 mb-2.5">
-              <div className="text-[0.72em] font-bold text-dash-text w-[110px] shrink-0 whitespace-nowrap overflow-hidden text-ellipsis" title={r.name}>
+            <div key={r.name} className="flex items-center gap-2 sm:gap-2.5 mb-2.5">
+              <div className="text-[0.65em] sm:text-[0.72em] font-bold text-dash-text w-[80px] sm:w-[110px] shrink-0 whitespace-nowrap overflow-hidden text-ellipsis" title={r.name}>
                 {r.name}
               </div>
               <div className="flex-1 h-2 bg-black/50 rounded overflow-hidden relative">
@@ -76,7 +76,7 @@ export default function GenreDistribution({ zerados, jogando, abandonados, backl
                   <div className="h-full rounded-r" style={{ width: `${100 - w}%`, background: col, opacity: 0.1 }} />
                 </div>
               </div>
-              <div className="text-[0.65em] font-extrabold whitespace-nowrap w-[70px] text-right shrink-0" style={{ color: col }}>
+              <div className="text-[0.6em] sm:text-[0.65em] font-extrabold whitespace-nowrap w-[55px] sm:w-[70px] text-right shrink-0" style={{ color: col }}>
                 {r.total} <span className="text-dash-muted font-semibold">({pctZerado}%✓)</span>
               </div>
             </div>

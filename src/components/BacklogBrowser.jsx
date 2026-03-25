@@ -3,6 +3,7 @@ import { getConsoleStyle, parseTime } from '../utils/helpers'
 import { useGameDetail } from '../contexts/GameDetailContext'
 import ConsoleBadge from './ConsoleBadge'
 import SectionTitle from './SectionTitle'
+import HltbBar from './HltbBar'
 import { Library, Search, Filter, SlidersHorizontal, Dices, ChevronDown } from 'lucide-react'
 
 const SORT_OPTIONS = [
@@ -20,7 +21,7 @@ function BacklogCard({ game }) {
   return (
     <div
       onClick={() => openGame({ ...game, _status: 'backlog' })}
-      className="bg-dash-surface rounded-lg border border-white/5 overflow-hidden flex flex-col h-[220px] transition-all duration-300 hover:scale-[1.03] hover:border-accent-gold hover:shadow-[0_0_12px_rgba(255,204,0,0.15)] cursor-pointer group"
+      className="bg-dash-surface rounded-lg border border-white/5 overflow-hidden flex flex-col h-[180px] sm:h-[220px] transition-all duration-300 hover:scale-[1.03] hover:border-accent-gold hover:shadow-[0_0_12px_rgba(255,204,0,0.15)] cursor-pointer group"
     >
       <div className="relative flex-1 w-full bg-black flex items-center justify-center overflow-hidden">
         {game.capa ? (
@@ -29,9 +30,9 @@ function BacklogCard({ game }) {
           <Library size={28} className="text-dash-muted" />
         )}
         {h > 0 && (
-          <span className="absolute top-1.5 right-1.5 text-[0.55em] font-black bg-black/70 text-dash-muted px-1.5 py-0.5 rounded border border-white/10">
-            {h}h
-          </span>
+          <div className="absolute bottom-1.5 left-1.5 right-1.5">
+            <HltbBar tempo={game.tempo || 0} hltb={game.hltb} consoleColor={s.col} variant="mini" />
+          </div>
         )}
       </div>
       <div className="px-2 py-1.5 bg-black/60 border-t border-white/5">
@@ -218,7 +219,7 @@ export default function BacklogBrowser({ backlog }) {
       ) : null}
 
       {/* grid */}
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-2.5">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-2 sm:gap-2.5">
         {filtered.map(g => <BacklogCard key={g._id || g.nome} game={g} />)}
       </div>
 

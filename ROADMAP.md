@@ -36,12 +36,12 @@
 | ~~1~~ | ~~Game Detail Page~~ | ~~Arquivos `.md` individuais~~ | ~~🔴 Alto~~ | ✅ Feito |
 | ~~2~~ | ~~Backlog Browser~~ | ~~`🚀 Backlog Ativo.md`~~ | ~~🔴 Alto~~ | ✅ Feito |
 | ~~3~~ | ~~Sagas Tracker~~ | ~~`Sagas.md` + `ob/Jogos/Sagas/*`~~ | ~~🔴 Alto~~ | ✅ Feito |
-| 4 | **Session Logger** | Logs de sessão nos `.md` de jogos | 🟡 Médio | ⬜ |
+| 4 | **Session Logger** | Logs de sessão nos `.md` de jogos | 🟡 Médio | ✅ Feito |
 | ~~5~~ | ~~Backlog Roulette~~ | ~~`🎮 My Ultimate Game Backlog.md`~~ | ~~🟡 Médio~~ | ✅ Feito |
 | ~~6~~ | ~~Now Playing Focus~~ | ~~`Nowplaying.md`~~ | ~~🟡 Médio~~ | ✅ Feito |
-| 7 | **Distribuição por Gênero** | `Stats.md` (top 6 gêneros) | 🟡 Médio | ⬜ |
-| 8 | **Backlog Health** | `Stats.md` (peso do backlog, prioridade VIP) | 🟢 Baixo | ⬜ |
-| 9 | **HLTB Display** | Usado em todos os dashboards Obsidian | 🟢 Baixo | ⬜ |
+| 7 | **Distribuição por Gênero** | `Stats.md` (top 6 gêneros) | 🟡 Médio | ✅ Feito |
+| 8 | **Backlog Health** | `Stats.md` (peso do backlog, prioridade VIP) | 🟢 Baixo | ✅ Feito |
+| 9 | **HLTB Display** | Usado em todos os dashboards Obsidian | 🟢 Baixo | ✅ Feito |
 
 ---
 
@@ -87,22 +87,42 @@
   - Métricas: pendentes, ritmo mensal, tempo estimado p/ zerar tudo, HLTB total
   - Indicadores visuais com ícones e cores adaptativas
 
-### Fase 3 — Polish & Extras
+### ✅ Fase 3 — Polish & Extras (CONCLUÍDA)
 > Polish final e melhorias visuais.
 
-- [ ] **3.1 HLTB Enhanced Display**
-  - Barra visual tempo jogado / HLTB em PlayingNow, PausedGames, Backlog
-  - Tooltip com estimativa de horas restantes
+- [x] **3.1 HLTB Enhanced Display** → `HltbBar.jsx`
+  - Componente reutilizável com barra gradiente, animação shine e tooltip de horas restantes
+  - Variantes: `card` (PlayingNow/PausedGames), `mini` (BacklogBrowser), modal (GameDetailModal)
+  - Cor adaptativa: verde p/ ≥80%, console color p/ 50-80%, danger p/ over-HLTB
+  - Tooltip hover com tempo restante ou alerta "além do HLTB"
 
-- [ ] **3.2 Saga Sync com Supabase**
-  - Salvar progresso de sagas no banco (atualmente lê de JSON estático)
-  - Marcar jogo como concluído direto no tracker
+- [x] **3.2 Saga Sync com Supabase** → `SagasTracker.jsx` + `migration-saga.sql`
+  - Tabela `user_saga_progress` (user_id, saga_nome, game_nome, done) com RLS
+  - Merge do JSON estático com progresso salvo pelo usuário
+  - Botão de toggle nos mini-cards: check verde (concluído) / fantasma (não iniciado)
+  - Upsert via Supabase com feedback via toast
 
-- [ ] **3.3 Mobile Polish**
-  - Revisão de responsividade dos novos componentes
-  - Swipe gestures no Game Detail Modal
+- [x] **3.3 Mobile Polish**
+  - GameDetailModal: swipe down to close, bottom-sheet style no mobile, swipe indicator
+  - BacklogBrowser: grid responsivo (110px mobile → 130px desktop), cards menores
+  - SagasTracker: mini-cards grid responsivo (70px → 80px)
+  - GenreDistribution: labels mais compactas em mobile (80px → 110px)
+  - StatPills menores em mobile, backdrop opacity ligada ao swipe
 
 ---
+
+## 📂 ARQUIVOS DA FASE 3
+
+| Arquivo | Tipo | Descrição |
+|---------|------|-----------||
+| `src/components/HltbBar.jsx` | Novo | Barra HLTB reutilizável com tooltip e variantes |
+| `src/components/PlayingNow.jsx` | Editado | Usa HltbBar no lugar da barra antiga |
+| `src/components/PausedGames.jsx` | Editado | Usa HltbBar no lugar da barra antiga |
+| `src/components/BacklogBrowser.jsx` | Editado | HltbBar mini, grid responsivo, card height adaptive |
+| `src/components/GameDetailModal.jsx` | Editado | Barra enhanced, swipe-to-close, bottom-sheet mobile |
+| `src/components/SagasTracker.jsx` | Editado | Supabase sync, toggle checkmarks, grid responsivo |
+| `src/components/GenreDistribution.jsx` | Editado | Labels e colunas responsivas |
+| `supabase/migration-saga.sql` | Novo | Tabela user_saga_progress + RLS |
 
 ## 📂 ARQUIVOS DA FASE 2
 
@@ -137,4 +157,4 @@
 |------|-----------|
 | Fase 1 — Core Pages | ✅ 3/3 |
 | Fase 2 — Interactions | ✅ 3/3 |
-| Fase 3 — Polish & Extras | ⬜ 0/3 |
+| Fase 3 — Polish & Extras | ✅ 3/3 |

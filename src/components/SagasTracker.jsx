@@ -1,9 +1,12 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { getConsoleStyle } from '../utils/helpers'
 import { useGameDetail } from '../contexts/GameDetailContext'
+import { useAuth } from '../contexts/AuthContext'
+import { supabase } from '../lib/supabase'
 import ConsoleBadge from './ConsoleBadge'
 import SectionTitle from './SectionTitle'
 import { Swords, ChevronDown, Check, Clock } from 'lucide-react'
+import toast from 'react-hot-toast'
 import sagasData from '../data/sagas.json'
 
 function SagaProgress({ done, total, color }) {
@@ -31,9 +34,11 @@ function SagaProgress({ done, total, color }) {
   )
 }
 
-function GameMiniCard({ game }) {
+function GameMiniCard({ game, sagaNome, onToggle }) {
   const { openGame } = useGameDetail()
+  const { user } = useAuth()
   const s = getConsoleStyle(game.console)
+  const [toggling, setToggling] = useState(false)
 
   const handleClick = () => {
     openGame({
@@ -46,6 +51,28 @@ function GameMiniCard({ game }) {
       nota: null,
       _status: game.done ? 'zerado' : 'backlog',
     })
+  }
+
+  const handleToggle = async (e) => {
+    e.stopPropagation()
+    if (!user || !supabase || toggling) return
+    setToggling(true)
+    const newDone = !game.done
+    try {
+      const { error } = await supabase
+        .from('user_saga_progress')
+        .upsert({
+          user_id: user.id,
+          saga_nome: sagaNome,
+          game_nome: game.nome,
+          done: newDone,
+        }, { onConflict: 'user_id,saga_nome,game_nome' })
+      if (!error) {
+        onToggle(sagaNome, game.nome, newDone)
+        toast.success(newDone ? `${game.nome} concluído!` : `${game.nome} desmarcado`)
+      }
+    } catch {}
+    setToggling(false)
   }
 
   return (
@@ -66,11 +93,23 @@ function GameMiniCard({ game }) {
         </div>
       )}
 
-      {/* done badge */}
-      {game.done && (
-        <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-accent-success flex items-center justify-center shadow-lg">
+      {/* done badge / toggle */}
+      {game.done ? (
+        <button
+          onClick={handleToggle}
+          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-accent-success flex items-center justify-center shadow-lg hover:bg-accent-success/80 transition-colors cursor-pointer z-10"
+          title="Desmarcar conclusão"
+        >
           <Check size={12} strokeWidth={3} className="text-black" />
-        </div>
+        </button>
+      ) : user && (
+        <button
+          onClick={handleToggle}
+          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 border border-white/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10 hover:bg-accent-success/30 hover:border-accent-success/50"
+          title="Marcar como concluído"
+        >
+          <Check size={10} strokeWidth={2.5} className="text-white/50" />
+        </button>
       )}
 
       {/* hltb badge */}
@@ -89,7 +128,7 @@ function GameMiniCard({ game }) {
   )
 }
 
-function SagaCard({ saga }) {
+function SagaCard({ saga, onToggle }) {
   const [open, setOpen] = useState(false)
   const done = saga.games.filter(g => g.done).length
   const total = saga.games.length
@@ -171,8 +210,8 @@ function SagaCard({ saga }) {
                   <span className="text-[0.6em] font-bold text-dash-muted">{groupDone}/{games.length}</span>
                   <div className="flex-1 h-px bg-white/5" />
                 </div>
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(80px,1fr))] gap-2">
-                  {games.map((g, i) => <GameMiniCard key={`${g.nome}-${i}`} game={g} />)}
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(70px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(80px,1fr))] gap-1.5 sm:gap-2">
+                  {games.map((g, i) => <GameMiniCard key={`${g.nome}-${i}`} game={g} sagaNome={saga.nome} onToggle={onToggle} />)}
                 </div>
               </div>
             )
@@ -184,22 +223,59 @@ function SagaCard({ saga }) {
 }
 
 export default function SagasTracker() {
+  const { user } = useAuth()
+  const [progressMap, setProgressMap] = useState({})
+
+  // Load user's saga progress from Supabase
+  useEffect(() => {
+    if (!supabase || !user) return
+    ;(async () => {
+      const { data, error } = await supabase
+        .from('user_saga_progress')
+        .select('saga_nome, game_nome, done')
+        .eq('user_id', user.id)
+      if (!error && data) {
+        const map = {}
+        for (const row of data) {
+          const key = `${row.saga_nome}::${row.game_nome}`
+          map[key] = row.done
+        }
+        setProgressMap(map)
+      }
+    })()
+  }, [user])
+
+  const handleToggle = useCallback((sagaNome, gameNome, done) => {
+    setProgressMap(prev => ({ ...prev, [`${sagaNome}::${gameNome}`]: done }))
+  }, [])
+
+  // Merge static JSON with user progress
+  const mergedSagas = useMemo(() => {
+    return sagasData.map(saga => ({
+      ...saga,
+      games: saga.games.map(g => {
+        const key = `${saga.nome}::${g.nome}`
+        const userDone = progressMap[key]
+        return { ...g, done: userDone !== undefined ? userDone : g.done }
+      }),
+    }))
+  }, [progressMap])
+
   const sorted = useMemo(() => {
-    return [...sagasData].sort((a, b) => {
+    return [...mergedSagas].sort((a, b) => {
       const pctA = a.games.length > 0 ? a.games.filter(g => g.done).length / a.games.length : 0
       const pctB = b.games.length > 0 ? b.games.filter(g => g.done).length / b.games.length : 0
-      // In-progress first, then not-started, then completed
       const groupA = pctA === 1 ? 2 : pctA > 0 ? 0 : 1
       const groupB = pctB === 1 ? 2 : pctB > 0 ? 0 : 1
       if (groupA !== groupB) return groupA - groupB
       return pctB - pctA
     })
-  }, [])
+  }, [mergedSagas])
 
   if (sagasData.length === 0) return null
 
-  const totalGames = sagasData.reduce((s, saga) => s + saga.games.length, 0)
-  const totalDone = sagasData.reduce((s, saga) => s + saga.games.filter(g => g.done).length, 0)
+  const totalGames = mergedSagas.reduce((s, saga) => s + saga.games.length, 0)
+  const totalDone = mergedSagas.reduce((s, saga) => s + saga.games.filter(g => g.done).length, 0)
 
   return (
     <div className="mb-8">
@@ -207,7 +283,7 @@ export default function SagasTracker() {
         SAGAS ({totalDone}/{totalGames})
       </SectionTitle>
       <div className="space-y-3">
-        {sorted.map(saga => <SagaCard key={saga.nome} saga={saga} />)}
+        {sorted.map(saga => <SagaCard key={saga.nome} saga={saga} onToggle={handleToggle} />)}
       </div>
     </div>
   )

@@ -2,6 +2,7 @@ import { parseTime, formatTime, getConsoleStyle } from '../utils/helpers'
 import { useGameDetail } from '../contexts/GameDetailContext'
 import ConsoleBadge from './ConsoleBadge'
 import SectionTitle from './SectionTitle'
+import HltbBar from './HltbBar'
 import { Pause } from 'lucide-react'
 
 function PausedCard({ game }) {
@@ -25,15 +26,7 @@ function PausedCard({ game }) {
           </div>
           <ConsoleBadge console={game.console} />
         </div>
-        <div>
-          <div className="flex justify-between text-[0.65em] font-extrabold mb-1">
-            <span style={{ color: s.col }}>{p}% concluído</span>
-            <span>{formatTime(t)}{h > 0 ? ` / ${h}h` : ''}</span>
-          </div>
-          <div className="h-1.5 bg-black/50 rounded overflow-hidden">
-            <div className="h-full rounded opacity-50" style={{ width: `${p}%`, background: s.col }} />
-          </div>
-        </div>
+        <HltbBar tempo={game.tempo} hltb={game.hltb} consoleColor={s.col} />
       </div>
     </div>
   )

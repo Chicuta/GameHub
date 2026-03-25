@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useGameDetail } from '../contexts/GameDetailContext'
 import { useUserGames } from '../contexts/UserGamesContext'
 import { parseTime, formatTime, getConsoleStyle, daysBetween, todayStr, formatDateBR } from '../utils/helpers'
@@ -8,7 +8,7 @@ import toast from 'react-hot-toast'
 
 function StatPill({ icon, label, value, color }) {
   return (
-    <div className="flex flex-col items-center gap-1 bg-black/30 rounded-xl px-4 py-3 border border-white/5 min-w-[100px]">
+    <div className="flex flex-col items-center gap-1 bg-black/30 rounded-xl px-3 py-2 sm:px-4 sm:py-3 border border-white/5 min-w-[80px] sm:min-w-[100px]">
       <div className="text-[0.65em] font-bold uppercase tracking-wider text-dash-muted flex items-center gap-1">
         {icon} {label}
       </div>
@@ -22,22 +22,49 @@ function ProgressSection({ tempo, hltb, consoleStyle }) {
   const h = parseFloat(hltb) || 0
   const p = h > 0 ? Math.min(Math.round((t / h) * 100), 100) : 0
   const restante = h > 0 ? Math.max(h - t, 0) : 0
+  const over = h > 0 && t > h
+
+  const barColor = over
+    ? '#ff0055'
+    : p >= 80
+      ? '#00ff9f'
+      : consoleStyle.col
+
+  const grad = over
+    ? 'linear-gradient(90deg, #ff0055, #ff4488)'
+    : `linear-gradient(90deg, ${barColor}, ${barColor}99)`
 
   return (
     <div className="bg-black/20 rounded-xl p-4 border border-white/5">
       <div className="flex justify-between text-sm font-extrabold mb-2">
-        <span style={{ color: consoleStyle.col }}>{p}% concluído</span>
+        <span style={{ color: barColor }}>{p}%{over ? ' ⚠️' : ''} concluído</span>
         <span className="text-dash-muted">{formatTime(t)} / {h > 0 ? `${h}h` : '—'}</span>
       </div>
       <div className="h-3 bg-black/50 rounded-full overflow-hidden">
         <div
-          className="h-full rounded-full transition-all duration-700"
-          style={{ width: `${p}%`, background: `linear-gradient(90deg, ${consoleStyle.col}, ${consoleStyle.col}cc)` }}
-        />
+          className="h-full rounded-full transition-all duration-700 relative"
+          style={{ width: `${Math.min(p, 100)}%`, background: grad }}
+        >
+          {p >= 15 && (
+            <div className="absolute inset-0 rounded-full overflow-hidden">
+              <div
+                className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 animate-shine-swipe"
+                style={{ width: '30%' }}
+              />
+            </div>
+          )}
+        </div>
       </div>
       {h > 0 && (
-        <div className="text-[0.7em] text-dash-muted mt-2 font-bold text-right">
-          {restante > 0 ? `${formatTime(restante)} restantes` : '✅ Tempo estimado atingido!'}
+        <div className="flex justify-between items-center mt-2">
+          <div className="text-[0.7em] font-bold text-dash-muted">
+            {restante > 0 ? `${formatTime(restante)} restantes` : over ? `+${formatTime(t - h)} além do HLTB` : '✅ HLTB atingido!'}
+          </div>
+          {restante > 0 && (
+            <div className="text-[0.65em] font-black px-2 py-0.5 rounded-full bg-accent-cyan/10 border border-accent-cyan/20 text-accent-cyan">
+              {restante.toFixed(1)}h faltando
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -193,10 +220,15 @@ function getGameStatus(game) {
 
 export default function GameDetailModal() {
   const { selectedGame, closeGame } = useGameDetail()
+  const modalRef = useRef(null)
+  const touchStartY = useRef(0)
+  const touchDeltaY = useRef(0)
+  const [translateY, setTranslateY] = useState(0)
 
   useEffect(() => {
     if (selectedGame) {
       document.body.style.overflow = 'hidden'
+      setTranslateY(0)
     } else {
       document.body.style.overflow = ''
     }
@@ -211,6 +243,34 @@ export default function GameDetailModal() {
     return () => window.removeEventListener('keydown', handleKey)
   }, [closeGame])
 
+  // Swipe down to close
+  function handleTouchStart(e) {
+    const el = modalRef.current
+    if (el && el.scrollTop <= 0) {
+      touchStartY.current = e.touches[0].clientY
+    } else {
+      touchStartY.current = 0
+    }
+  }
+
+  function handleTouchMove(e) {
+    if (!touchStartY.current) return
+    const delta = e.touches[0].clientY - touchStartY.current
+    if (delta > 0) {
+      touchDeltaY.current = delta
+      setTranslateY(delta)
+    }
+  }
+
+  function handleTouchEnd() {
+    if (touchDeltaY.current > 120) {
+      closeGame()
+    }
+    touchDeltaY.current = 0
+    touchStartY.current = 0
+    setTranslateY(0)
+  }
+
   if (!selectedGame) return null
 
   const game = selectedGame
@@ -224,17 +284,26 @@ export default function GameDetailModal() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
       onClick={closeGame}
     >
       {/* backdrop */}
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" style={{ opacity: Math.max(0.3, 1 - translateY / 300) }} />
 
       {/* modal */}
       <div
-        className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-dash-bg border border-dash-border rounded-2xl shadow-2xl"
+        ref={modalRef}
+        className="relative w-full sm:max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto bg-dash-bg border border-dash-border rounded-t-2xl sm:rounded-2xl shadow-2xl transition-transform"
+        style={{ transform: translateY > 0 ? `translateY(${translateY}px)` : undefined }}
         onClick={e => e.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
+        {/* Swipe indicator (mobile) */}
+        <div className="sm:hidden flex justify-center pt-2 pb-1">
+          <div className="w-10 h-1 rounded-full bg-white/20" />
+        </div>
         {/* header com capa */}
         <div className="relative h-[220px] md:h-[260px] overflow-hidden rounded-t-2xl">
           {game.capa && (
