@@ -21,6 +21,7 @@ import GameSearch from './components/GameSearch'
 import LandingHero from './components/LandingHero'
 import PausedGames from './components/PausedGames'
 import BacklogBrowser from './components/BacklogBrowser'
+import SagasTracker from './components/SagasTracker'
 import AuthPage from './pages/AuthPage'
 import { Gamepad2, User } from 'lucide-react'
 
@@ -93,6 +94,7 @@ function Perfil() {
           <HallOfFame zerados={zerados} />
           <GlobalAnalysis zerados={zerados} jogando={jogando} abandonados={abandonados} backlog={backlog} pausados={pausados} updateGame={updateGame} removeGame={removeGame} reload={reload} />
           <BacklogBrowser backlog={backlog} />
+          <SagasTracker />
           <BacklogByPlatform backlog={backlog} />
           <Cemetery abandonados={abandonados} />
         </>

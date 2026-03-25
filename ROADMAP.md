@@ -45,19 +45,19 @@
 ### Fase 1 — Core Missing Pages
 > Preencher as maiores lacunas entre Obsidian e o app.
 
-- [ ] **1.1 Game Detail Page**
+- [x] **1.1 Game Detail Page**
   - Modal/drawer com capa grande, progresso (tempo jogado vs HLTB)
   - ETA calculado, nota, gênero, console badge
   - Histórico de sessões
   - Botões de ação: editar campos, mudar status
 
-- [ ] **1.2 Backlog Browser**
+- [x] **1.2 Backlog Browser**
   - Nova rota `/backlog`
   - Grid visual de todos os jogos pendentes com capas
   - Filtros: plataforma, gênero, status
   - Busca por nome, ordenação (nome, plataforma, HLTB)
 
-- [ ] **1.3 Sagas Tracker**
+- [x] **1.3 Sagas Tracker**
   - Novo componente `SagasTracker.jsx`
   - Listar franquias com barra de progresso
   - Jogos completados vs total por saga
@@ -104,6 +104,6 @@
 
 | Fase | Progresso |
 |------|-----------|
-| Fase 1 — Core Pages | ⬜ 0/3 |
+| Fase 1 — Core Pages | ✅ 3/3 |
 | Fase 2 — Interactions | ⬜ 0/3 |
 | Fase 3 — Analytics | ⬜ 0/3 |
