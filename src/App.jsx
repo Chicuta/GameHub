@@ -22,6 +22,8 @@ import LandingHero from './components/LandingHero'
 import PausedGames from './components/PausedGames'
 import BacklogBrowser from './components/BacklogBrowser'
 import SagasTracker from './components/SagasTracker'
+import GenreDistribution from './components/GenreDistribution'
+import BacklogHealth from './components/BacklogHealth'
 import AuthPage from './pages/AuthPage'
 import { Gamepad2, User } from 'lucide-react'
 
@@ -95,6 +97,8 @@ function Perfil() {
           <GlobalAnalysis zerados={zerados} jogando={jogando} abandonados={abandonados} backlog={backlog} pausados={pausados} updateGame={updateGame} removeGame={removeGame} reload={reload} />
           <BacklogBrowser backlog={backlog} />
           <SagasTracker />
+          <GenreDistribution zerados={zerados} jogando={jogando} abandonados={abandonados} backlog={backlog} pausados={pausados} />
+          <BacklogHealth zerados={zerados} jogando={jogando} backlog={backlog} pausados={pausados} abandonados={abandonados} />
           <BacklogByPlatform backlog={backlog} />
           <Cemetery abandonados={abandonados} />
         </>

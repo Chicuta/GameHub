@@ -1,8 +1,10 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useGameDetail } from '../contexts/GameDetailContext'
+import { useUserGames } from '../contexts/UserGamesContext'
 import { parseTime, formatTime, getConsoleStyle, daysBetween, todayStr, formatDateBR } from '../utils/helpers'
 import ConsoleBadge from './ConsoleBadge'
-import { X, Clock, Target, Calendar, Star, Flame, TrendingUp, Gamepad2 } from 'lucide-react'
+import { X, Clock, Target, Calendar, Star, Flame, TrendingUp, Gamepad2, Plus, Timer } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 function StatPill({ icon, label, value, color }) {
   return (
@@ -90,6 +92,93 @@ const statusConfig = {
   pausado: { label: 'Pausado', color: '#bc13fe', icon: <Clock size={14} strokeWidth={2.5} /> },
   abandonado: { label: 'Abandonado', color: '#ff0055', icon: <X size={14} strokeWidth={2.5} /> },
   backlog: { label: 'Backlog', color: '#94a3b8', icon: <Target size={14} strokeWidth={2.5} /> },
+}
+
+function SessionLogger({ game }) {
+  const { updateGame, reload } = useUserGames()
+  const { openGame } = useGameDetail()
+  const [open, setOpen] = useState(false)
+  const [inicio, setInicio] = useState('')
+  const [fim, setFim] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const duracao = (() => {
+    if (!inicio || !fim) return null
+    const [h1, m1] = inicio.split(':').map(Number)
+    const [h2, m2] = fim.split(':').map(Number)
+    const totalMin = (h2 * 60 + m2) - (h1 * 60 + m1)
+    if (totalMin <= 0) return null
+    return totalMin / 60
+  })()
+
+  if (!game._id) return null
+
+  async function handleSave() {
+    if (!duracao || duracao <= 0) return
+    setSaving(true)
+    const currentTempo = parseTime(game.tempo)
+    const newTempo = Math.round((currentTempo + duracao) * 100) / 100
+    const err = await updateGame(game._id, { tempo: newTempo })
+    if (!err) {
+      toast.success(`+${formatTime(duracao)} registrado!`)
+      await reload()
+      openGame({ ...game, tempo: newTempo })
+      setInicio('')
+      setFim('')
+      setOpen(false)
+    } else {
+      toast.error('Erro ao salvar sessão')
+    }
+    setSaving(false)
+  }
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="w-full py-2.5 rounded-xl border-2 border-dashed border-accent-cyan/30 text-accent-cyan font-heading font-black uppercase tracking-wider text-xs hover:bg-accent-cyan/5 hover:border-accent-cyan/50 transition-all cursor-pointer flex items-center justify-center gap-2"
+      >
+        <Timer size={14} strokeWidth={2.5} /> Registrar Sessão
+      </button>
+    )
+  }
+
+  const inputCls = 'bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm font-bold focus:outline-none focus:border-accent-cyan transition-colors w-full'
+
+  return (
+    <div className="bg-black/20 rounded-xl p-4 border border-accent-cyan/20">
+      <div className="flex items-center justify-between mb-3">
+        <div className="text-[0.7em] font-black uppercase tracking-wider text-accent-cyan flex items-center gap-1.5">
+          <Timer size={14} strokeWidth={2.5} /> Nova Sessão
+        </div>
+        <button onClick={() => setOpen(false)} className="text-dash-muted hover:text-white cursor-pointer">
+          <X size={14} strokeWidth={2.5} />
+        </button>
+      </div>
+      <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end">
+        <div>
+          <label className="block text-[0.6em] font-bold uppercase text-dash-muted mb-1">Início</label>
+          <input type="time" value={inicio} onChange={e => setInicio(e.target.value)} className={inputCls} />
+        </div>
+        <div>
+          <label className="block text-[0.6em] font-bold uppercase text-dash-muted mb-1">Fim</label>
+          <input type="time" value={fim} onChange={e => setFim(e.target.value)} className={inputCls} />
+        </div>
+        <button
+          onClick={handleSave}
+          disabled={!duracao || duracao <= 0 || saving}
+          className="h-[38px] px-4 rounded-lg bg-accent-cyan/15 text-accent-cyan font-black text-xs uppercase tracking-wider border border-accent-cyan/30 hover:bg-accent-cyan/25 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          {saving ? '...' : <Plus size={16} strokeWidth={2.5} />}
+        </button>
+      </div>
+      {duracao && duracao > 0 && (
+        <div className="mt-2 text-[0.7em] font-bold text-accent-success text-center">
+          +{formatTime(duracao)} será adicionado ({formatTime(parseTime(game.tempo))} → {formatTime(parseTime(game.tempo) + duracao)})
+        </div>
+      )}
+    </div>
+  )
 }
 
 function getGameStatus(game) {
@@ -255,6 +344,11 @@ export default function GameDetailModal() {
 
           {/* ETA */}
           <EtaSection game={game} />
+
+          {/* session logger — only for active games with _id */}
+          {(status === 'jogando' || status === 'pausado') && (
+            <SessionLogger game={game} />
+          )}
         </div>
       </div>
     </div>
