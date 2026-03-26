@@ -348,8 +348,6 @@ export default function BacklogBrowser({ backlog, onGameAdded }) {
     setRouletteGame(filtered[idx])
   }
 
-  if (!backlog || backlog.length === 0) return null
-
   const selectCls = 'bg-black/40 border border-white/10 rounded-lg px-2.5 py-1.5 text-white text-xs font-bold focus:outline-none focus:border-accent-cyan transition-colors appearance-none cursor-pointer'
 
   return (

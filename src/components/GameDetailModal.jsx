@@ -202,7 +202,7 @@ const GENRE_OPTIONS = [
   'FPS', 'TPS', 'Plataforma', 'Metroidvania',
   'Puzzle', 'Estratégia', 'Simulação', 'Corrida',
   'Esporte', 'Luta', 'Terror', 'Roguelike',
-  'Sandbox', 'Mundo Aberto', 'Visual Novel', 'Indie', 'Outro',
+  'Sandbox', 'Mundo Aberto', 'Visual Novel', 'Indie',
 ]
 
 function CoverEditor({ game }) {
@@ -292,11 +292,14 @@ function GenreEditor({ game }) {
   const { reload } = useUserGames()
   const { openGame } = useGameDetail()
   const [editing, setEditing] = useState(false)
+  const [customMode, setCustomMode] = useState(false)
+  const [customValue, setCustomValue] = useState('')
   const [saving, setSaving] = useState(false)
 
-  async function handleChange(newGenero) {
+  async function saveGenre(newGenero) {
     if (newGenero === game.genero || !newGenero) {
       setEditing(false)
+      setCustomMode(false)
       return
     }
     setSaving(true)
@@ -313,6 +316,49 @@ function GenreEditor({ game }) {
     }
     setSaving(false)
     setEditing(false)
+    setCustomMode(false)
+  }
+
+  function handleSelectChange(value) {
+    if (value === '__custom__') {
+      setCustomMode(true)
+      setCustomValue('')
+    } else {
+      saveGenre(value)
+    }
+  }
+
+  if (editing && customMode) {
+    return (
+      <div className="inline-flex items-center gap-1">
+        <input
+          autoFocus
+          type="text"
+          value={customValue}
+          onChange={e => setCustomValue(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter') saveGenre(customValue.trim())
+            if (e.key === 'Escape') { setCustomMode(false); setEditing(false) }
+          }}
+          placeholder={t('gameDetail.typeGenre', 'Digite o gênero...')}
+          disabled={saving}
+          className="bg-black/60 border border-accent-purple/40 rounded text-[0.6em] font-bold text-white px-1.5 py-0.5 focus:outline-none w-28"
+        />
+        <button
+          onClick={() => saveGenre(customValue.trim())}
+          disabled={saving || !customValue.trim()}
+          className="text-[0.55em] font-black uppercase text-accent-purple hover:text-white transition-colors disabled:opacity-40 cursor-pointer px-1"
+        >
+          OK
+        </button>
+        <button
+          onClick={() => { setCustomMode(false); setEditing(false) }}
+          className="text-[0.55em] font-black uppercase text-dash-muted hover:text-white transition-colors cursor-pointer px-1"
+        >
+          ✕
+        </button>
+      </div>
+    )
   }
 
   if (editing) {
@@ -320,7 +366,7 @@ function GenreEditor({ game }) {
       <select
         autoFocus
         value={game.genero || ''}
-        onChange={e => handleChange(e.target.value)}
+        onChange={e => handleSelectChange(e.target.value)}
         onBlur={() => setEditing(false)}
         disabled={saving}
         className="bg-black/60 border border-accent-purple/40 rounded text-[0.6em] font-bold text-white px-1.5 py-0.5 focus:outline-none cursor-pointer"
@@ -332,6 +378,7 @@ function GenreEditor({ game }) {
         {GENRE_OPTIONS.map(g => (
           <option key={g} value={g}>{g}</option>
         ))}
+        <option value="__custom__">✏️ {t('gameDetail.customGenre', 'Outro (digitar)')}</option>
       </select>
     )
   }

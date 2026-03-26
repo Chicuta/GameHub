@@ -16,7 +16,6 @@ import AnnualEvolution from './components/AnnualEvolution'
 import Retrospective from './components/Retrospective'
 import HallOfFame from './components/HallOfFame'
 import GlobalAnalysis from './components/GlobalAnalysis'
-import BacklogByPlatform from './components/BacklogByPlatform'
 import Cemetery from './components/Cemetery'
 import GameSearch from './components/GameSearch'
 import LandingHero from './components/LandingHero'
@@ -111,7 +110,6 @@ function Perfil() {
           <SagasTracker />
           <GenreDistribution zerados={zerados} jogando={jogando} abandonados={abandonados} backlog={backlog} pausados={pausados} />
           <BacklogHealth zerados={zerados} jogando={jogando} backlog={backlog} pausados={pausados} abandonados={abandonados} />
-          <BacklogByPlatform backlog={backlog} />
           <Cemetery abandonados={abandonados} />
           <GlobalAnalysis zerados={zerados} jogando={jogando} abandonados={abandonados} pausados={pausados} updateGame={updateGame} removeGame={removeGame} reload={reload} />
         </>
