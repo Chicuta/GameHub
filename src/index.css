@@ -29,6 +29,11 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(0, 245, 255, 0.15); border-radius: 3px; }
 
+@keyframes slideUp {
+  from { transform: translateY(1rem); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
 @keyframes flame-flicker {
   0%   { transform: scaleY(1) scaleX(1) translateY(0); opacity: 1; }
   25%  { transform: scaleY(1.1) scaleX(0.93) translateY(-1px); opacity: 0.9; }

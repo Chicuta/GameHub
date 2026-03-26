@@ -381,5 +381,13 @@
     "Visual Novel": "Visual Novel",
     "Indie": "Indie",
     "Outro": "Other"
+  },
+  "pwa": {
+    "updateAvailable": "New version available!",
+    "updateNow": "Update",
+    "dismiss": "Later",
+    "install": "Install App",
+    "offline": "You are offline",
+    "offlineDesc": "Connect to the internet to access your data."
   }
 }

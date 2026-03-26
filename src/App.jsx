@@ -28,6 +28,7 @@ import AuthPage from './pages/AuthPage'
 import CatalogPage from './pages/CatalogPage'
 import { Gamepad2, User, BookOpen } from 'lucide-react'
 import LanguageSwitcher from './components/LanguageSwitcher'
+import { PwaUpdatePrompt, PwaInstallButton, OfflineBanner } from './components/PwaPrompts'
 
 /* ── Navbar ─────────────────────────────────────── */
 function Navbar() {
@@ -47,6 +48,7 @@ function Navbar() {
         </Link>
       </div>
       <div className="flex items-center gap-3">
+        <PwaInstallButton />
         <LanguageSwitcher />
         {user ? (
           <>
@@ -136,6 +138,8 @@ export default function App() {
               </Routes>
             </div>
             <GameDetailModal />
+            <PwaUpdatePrompt />
+            <OfflineBanner />
             <Toaster
               position="bottom-right"
               toastOptions={{
