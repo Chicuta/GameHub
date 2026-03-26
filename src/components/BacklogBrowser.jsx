@@ -9,6 +9,7 @@ import toast from 'react-hot-toast'
 import SectionTitle from './SectionTitle'
 import HltbBar from './HltbBar'
 import { Library, Search, Filter, SlidersHorizontal, Dices, ChevronDown, Plus, LayoutGrid, Globe, Loader2 } from 'lucide-react'
+import Accordion from './Accordion'
 
 const RAWG_KEY = import.meta.env.VITE_RAWG_API_KEY
 
@@ -470,21 +471,18 @@ export default function BacklogBrowser({ backlog, onGameAdded }) {
         groupedByPlatform.map(([platform, games]) => {
           const s = getConsoleStyle(platform)
           return (
-            <div key={platform} className="mb-6">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-lg">{s.ico}</span>
-                <span className="font-heading font-black text-sm text-white">{s.name || platform}</span>
-                <span
-                  className="text-[0.65em] font-black rounded-full px-2 py-0.5 min-w-[1.5rem] text-center"
-                  style={{ backgroundColor: s.col + '22', color: s.col }}
-                >
-                  {games.length}
-                </span>
+            <Accordion
+              key={platform}
+              title={`${s.ico} ${s.name || platform}`}
+              color={s.col}
+              rightText={`${games.length} ${games.length !== 1 ? t('backlogByPlatform.games') : t('backlogByPlatform.game')}`}
+            >
+              <div className="pt-3">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-2 sm:gap-2.5">
+                  {games.map(g => <BacklogCard key={g._id || g.nome} game={g} />)}
+                </div>
               </div>
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-2 sm:gap-2.5">
-                {games.map(g => <BacklogCard key={g._id || g.nome} game={g} />)}
-              </div>
-            </div>
+            </Accordion>
           )
         })
       ) : (

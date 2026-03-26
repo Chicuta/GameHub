@@ -151,6 +151,9 @@
     "removeFromBacklog": "Remove from collection",
     "removedFromBacklog": "Game removed from collection!",
     "removeConfirm": "Are you sure you want to remove this game?",
+    "changeCover": "Change cover",
+    "coverChanged": "Cover updated!",
+    "coverPlaceholder": "Paste image URL...",
     "remaining_hltb": "{{time}} remaining",
     "overHltb": "+{{time}} over HLTB",
     "hltbReached": "✅ HLTB reached!"
@@ -234,13 +237,18 @@
   },
   "hallOfFame": {
     "title": "HALL OF FAME",
-    "goty": "GOTY"
+    "goty": "GOTY",
+    "games": "games",
+    "game": "game"
   },
   "cemetery": {
     "title": "THE CEMETERY"
   },
   "paused": {
-    "title": "PAUSED"
+    "title": "PAUSED",
+    "allPaused": "Paused games",
+    "games": "games",
+    "game": "game"
   },
   "goty": {
     "title": "GOTY",
@@ -271,7 +279,9 @@
     "updated": "Saga updated!",
     "created": "Saga created!",
     "deleted": "Saga deleted",
-    "nameRequired": "Name is required"
+    "nameRequired": "Name is required",
+    "searchRawg": "Search on RAWG",
+    "rawgNoResults": "No results on RAWG."
   },
   "trending": {
     "title": "Trending",
@@ -294,7 +304,10 @@
     "estimatedTime": "estimated time to play all"
   },
   "backlogByPlatform": {
-    "title": "BACKLOG BY PLATFORM"
+    "title": "BACKLOG BY PLATFORM",
+    "games": "games",
+    "game": "game",
+    "pending": "pending"
   },
   "genreDistribution": {
     "title": "GENRE DISTRIBUTION",

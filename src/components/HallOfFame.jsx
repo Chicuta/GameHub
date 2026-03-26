@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { parseTime } from '../utils/helpers'
 import { useGameDetail } from '../contexts/GameDetailContext'
 import SectionTitle from './SectionTitle'
+import Accordion from './Accordion'
 import { Trophy, Medal, Crown, Calendar } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -68,17 +69,21 @@ export default function HallOfFame({ zerados }) {
         const gAno = fameGames.filter(g => g.ano_zerado === ano)
         const gotyNome = getGotyDoAno(ano)
         return (
-          <div key={ano} className="mb-5">
-            <div className="font-heading font-black uppercase tracking-[3px] text-accent-gold mb-2.5 flex items-center gap-2">
-                            <Medal size={14} strokeWidth={2.5} className="inline-block align-[-0.1em] text-accent-gold" /> {ano}
-              <div className="flex-1 h-px bg-gradient-to-r from-accent-gold/40 to-transparent" />
+          <Accordion
+            key={ano}
+            title={`${ano}`}
+            color="#ffd700"
+            icon={<Medal size={18} strokeWidth={2.5} />}
+            rightText={`${gAno.length} ${gAno.length !== 1 ? t('hallOfFame.games') : t('hallOfFame.game')}`}
+          >
+            <div className="pt-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+                {gAno.map(g => (
+                  <PosterCard key={g.nome} game={g} isGoty={g.nome === gotyNome} isFame />
+                ))}
+              </div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-              {gAno.map(g => (
-                <PosterCard key={g.nome} game={g} isGoty={g.nome === gotyNome} isFame />
-              ))}
-            </div>
-          </div>
+          </Accordion>
         )
       })}
     </div>

@@ -7,7 +7,7 @@ import { parseTime, formatTime, getConsoleStyle, daysBetween, todayStr, formatDa
 import { fetchSessions, createSession, updateSession, deleteSession } from '../lib/gamesApi'
 import { supabase } from '../lib/supabase'
 import ConsoleBadge from './ConsoleBadge'
-import { X, Clock, Target, Calendar, Star, Flame, TrendingUp, Gamepad2, Plus, Timer, Trophy, Pencil, Trash2, History, ChevronDown, ChevronUp } from 'lucide-react'
+import { X, Clock, Target, Calendar, Star, Flame, TrendingUp, Gamepad2, Plus, Timer, Trophy, Pencil, Trash2, History, ChevronDown, ChevronUp, ImagePlus } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 function StatPill({ icon, label, value, color }) {
@@ -204,6 +204,88 @@ const GENRE_OPTIONS = [
   'Esporte', 'Luta', 'Terror', 'Roguelike',
   'Sandbox', 'Mundo Aberto', 'Visual Novel', 'Indie', 'Outro',
 ]
+
+function CoverEditor({ game }) {
+  const { t } = useTranslation()
+  const { reload } = useUserGames()
+  const { openGame } = useGameDetail()
+  const [editing, setEditing] = useState(false)
+  const [url, setUrl] = useState(game.capa || '')
+  const [saving, setSaving] = useState(false)
+
+  async function handleSave() {
+    const trimmed = url.trim()
+    if (trimmed === (game.capa || '')) {
+      setEditing(false)
+      return
+    }
+    setSaving(true)
+    if (game._gameId) {
+      const { error } = await supabase
+        .from('games')
+        .update({ capa: trimmed || null })
+        .eq('id', game._gameId)
+      if (!error) {
+        toast.success(t('gameDetail.coverChanged'))
+        await reload()
+        openGame({ ...game, capa: trimmed || null })
+      }
+    }
+    setSaving(false)
+    setEditing(false)
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter') handleSave()
+    if (e.key === 'Escape') { setUrl(game.capa || ''); setEditing(false) }
+  }
+
+  if (!game._gameId) return null
+
+  if (editing) {
+    return (
+      <div className="absolute bottom-16 left-5 right-5 z-20 bg-black/80 backdrop-blur-md rounded-xl p-3 border border-accent-cyan/30 space-y-2">
+        <div className="text-[0.65em] font-black uppercase tracking-wider text-accent-cyan flex items-center gap-1.5">
+          <ImagePlus size={12} strokeWidth={2.5} /> {t('gameDetail.changeCover')}
+        </div>
+        <input
+          autoFocus
+          type="url"
+          value={url}
+          onChange={e => setUrl(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={t('gameDetail.coverPlaceholder')}
+          className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white text-xs font-bold focus:outline-none focus:border-accent-cyan transition-colors placeholder:text-dash-muted"
+        />
+        <div className="flex gap-2 justify-end">
+          <button
+            onClick={() => { setUrl(game.capa || ''); setEditing(false) }}
+            className="px-3 py-1.5 rounded-lg bg-white/5 text-dash-muted font-black text-[0.65em] uppercase tracking-wider border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
+          >
+            {t('common.cancel')}
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-3 py-1.5 rounded-lg bg-accent-cyan/15 text-accent-cyan font-black text-[0.65em] uppercase tracking-wider border border-accent-cyan/30 hover:bg-accent-cyan/25 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {saving ? '...' : t('common.save')}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <button
+      onClick={() => setEditing(true)}
+      className="absolute bottom-1 right-1 z-10 w-6 h-6 flex items-center justify-center rounded-full bg-black/60 border border-white/20 text-white/60 hover:text-accent-cyan hover:border-accent-cyan/50 transition-all cursor-pointer opacity-0 group-hover:opacity-100"
+      title={t('gameDetail.changeCover')}
+    >
+      <Pencil size={10} strokeWidth={2.5} />
+    </button>
+  )
+}
 
 function GenreEditor({ game }) {
   const { t } = useTranslation()
@@ -825,21 +907,24 @@ export default function GameDetailModal() {
 
           {/* capa + info */}
           <div className="absolute bottom-0 left-0 right-0 p-5 flex items-end gap-4">
-            {game.capa ? (
-              <img
-                src={game.capa}
-                alt={game.nome}
-                className="w-[100px] h-[140px] md:w-[120px] md:h-[165px] object-cover rounded-lg shadow-xl border-2"
-                style={{ borderColor: `${s.col}60` }}
-              />
-            ) : (
-              <div
-                className="w-[100px] h-[140px] md:w-[120px] md:h-[165px] bg-dash-surface rounded-lg border-2 flex items-center justify-center text-3xl"
-                style={{ borderColor: `${s.col}60` }}
-              >
-                <Gamepad2 size={32} className="text-dash-muted" />
-              </div>
-            )}
+            <div className="relative group shrink-0">
+              {game.capa ? (
+                <img
+                  src={game.capa}
+                  alt={game.nome}
+                  className="w-[100px] h-[140px] md:w-[120px] md:h-[165px] object-cover rounded-lg shadow-xl border-2"
+                  style={{ borderColor: `${s.col}60` }}
+                />
+              ) : (
+                <div
+                  className="w-[100px] h-[140px] md:w-[120px] md:h-[165px] bg-dash-surface rounded-lg border-2 flex items-center justify-center text-3xl"
+                  style={{ borderColor: `${s.col}60` }}
+                >
+                  <Gamepad2 size={32} className="text-dash-muted" />
+                </div>
+              )}
+              <CoverEditor game={game} />
+            </div>
             <div className="flex-1 min-w-0 pb-1">
               <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                 <span

@@ -151,6 +151,9 @@
     "removeFromBacklog": "Remover da coleção",
     "removedFromBacklog": "Jogo removido da coleção!",
     "removeConfirm": "Tem certeza que deseja remover este jogo?",
+    "changeCover": "Alterar capa",
+    "coverChanged": "Capa atualizada!",
+    "coverPlaceholder": "Cole a URL da imagem...",
     "remaining_hltb": "{{time}} restantes",
     "overHltb": "+{{time}} além do HLTB",
     "hltbReached": "✅ HLTB atingido!"
@@ -234,13 +237,18 @@
   },
   "hallOfFame": {
     "title": "HALL DA FAMA",
-    "goty": "GOTY"
+    "goty": "GOTY",
+    "games": "jogos",
+    "game": "jogo"
   },
   "cemetery": {
     "title": "O CEMITÉRIO"
   },
   "paused": {
-    "title": "PAUSADOS"
+    "title": "PAUSADOS",
+    "allPaused": "Jogos pausados",
+    "games": "jogos",
+    "game": "jogo"
   },
   "goty": {
     "title": "GOTY",
@@ -271,7 +279,9 @@
     "updated": "Saga atualizada!",
     "created": "Saga criada!",
     "deleted": "Saga deletada",
-    "nameRequired": "Nome é obrigatório"
+    "nameRequired": "Nome é obrigatório",
+    "searchRawg": "Buscar na RAWG",
+    "rawgNoResults": "Nenhum resultado na RAWG."
   },
   "trending": {
     "title": "Em Alta",
@@ -294,7 +304,10 @@
     "estimatedTime": "tempo estimado para jogar tudo"
   },
   "backlogByPlatform": {
-    "title": "BACKLOG POR PLATAFORMA"
+    "title": "BACKLOG POR PLATAFORMA",
+    "games": "jogos",
+    "game": "jogo",
+    "pending": "pendentes"
   },
   "genreDistribution": {
     "title": "DISTRIBUIÇÃO POR GÊNERO",

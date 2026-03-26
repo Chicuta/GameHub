@@ -6,8 +6,10 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import ConsoleBadge from './ConsoleBadge'
 import SectionTitle from './SectionTitle'
-import { Swords, ChevronDown, Check, Clock, Plus, Trash2, X, Pencil } from 'lucide-react'
+import { Swords, ChevronDown, Check, Clock, Plus, Trash2, X, Pencil, Globe, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
+
+const RAWG_KEY = import.meta.env.VITE_RAWG_API_KEY
 
 const inputCls = 'w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-accent-cyan transition-colors'
 
@@ -130,7 +132,7 @@ function GameMiniCard({ game, onToggle, onRemove }) {
   )
 }
 
-/* ── Add Game to Saga (search from DB) ─────────── */
+/* ── Add Game to Saga (search from DB + RAWG) ── */
 function AddGameToSaga({ sagaId, onAdded }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
@@ -138,13 +140,17 @@ function AddGameToSaga({ sagaId, onAdded }) {
   const [results, setResults] = useState([])
   const [searching, setSearching] = useState(false)
   const [adding, setAdding] = useState(null)
+  const [rawgResults, setRawgResults] = useState([])
+  const [rawgLoading, setRawgLoading] = useState(false)
+  const [rawgSearched, setRawgSearched] = useState(false)
   const debounceRef = useRef(null)
 
   useEffect(() => {
-    if (!query.trim() || query.length < 2) { setResults([]); return }
+    if (!query.trim() || query.length < 2) { setResults([]); setRawgResults([]); setRawgSearched(false); return }
     clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(async () => {
       setSearching(true)
+      setRawgResults([]); setRawgSearched(false)
       const { data } = await supabase
         .from('games')
         .select('id, nome, capa, plataformas, data_lancamento, hltb_main')
@@ -156,6 +162,68 @@ function AddGameToSaga({ sagaId, onAdded }) {
     }, 300)
     return () => clearTimeout(debounceRef.current)
   }, [query])
+
+  async function searchRawg() {
+    if (!query.trim() || !RAWG_KEY) return
+    setRawgLoading(true); setRawgSearched(true)
+    try {
+      const res = await fetch(`https://api.rawg.io/api/games?key=${RAWG_KEY}&search=${encodeURIComponent(query.trim())}&page_size=12`)
+      if (!res.ok) throw new Error('RAWG request failed')
+      const data = await res.json()
+      const localNames = new Set(results.map(g => g.nome.toLowerCase()))
+      const localRawgIds = new Set(results.map(g => g.rawg_id).filter(Boolean))
+      const filtered = (data.results || []).filter(g =>
+        !localRawgIds.has(g.id) && !localNames.has(g.name.toLowerCase())
+      )
+      setRawgResults(filtered)
+    } catch {
+      setRawgResults([])
+    } finally { setRawgLoading(false) }
+  }
+
+  async function importAndAddFromRawg(rawgGame) {
+    setAdding(rawgGame.id)
+    try {
+      const generos = (rawgGame.genres || []).map(g => g.name)
+      const plataformas = (rawgGame.platforms || []).map(p => p.platform?.name).filter(Boolean)
+      const row = {
+        rawg_id: rawgGame.id,
+        nome: rawgGame.name,
+        slug: rawgGame.slug,
+        capa: rawgGame.background_image || null,
+        generos: generos.length > 0 ? generos : null,
+        plataformas: plataformas.length > 0 ? plataformas : null,
+        data_lancamento: rawgGame.released || null,
+        metacritic: rawgGame.metacritic || null,
+        rawg_rating: rawgGame.rating || null,
+      }
+      const { data: imported, error: importErr } = await supabase
+        .from('games').upsert(row, { onConflict: 'rawg_id' }).select().single()
+      if (importErr) throw importErr
+
+      const year = imported.data_lancamento ? new Date(imported.data_lancamento).getFullYear() : null
+      const { data, error } = await supabase
+        .from('user_saga_games')
+        .insert({
+          saga_id: sagaId,
+          nome: imported.nome,
+          console: imported.plataformas?.[0] || '',
+          ano: year,
+          hltb: imported.hltb_main || null,
+          capa: imported.capa,
+          done: false,
+        })
+        .select()
+        .single()
+      if (error) throw error
+
+      toast.success(t('sagas.addedToSaga', { name: imported.nome }))
+      onAdded(data)
+      setRawgResults(prev => prev.filter(g => g.id !== rawgGame.id))
+    } catch (err) {
+      toast.error(err.message || t('sagas.addError'))
+    } finally { setAdding(null) }
+  }
 
   async function addGame(game) {
     setAdding(game.id)
@@ -178,6 +246,8 @@ function AddGameToSaga({ sagaId, onAdded }) {
       onAdded(data)
       setQuery('')
       setResults([])
+      setRawgResults([])
+      setRawgSearched(false)
     } else {
       toast.error(t('sagas.addError'))
     }
@@ -196,7 +266,7 @@ function AddGameToSaga({ sagaId, onAdded }) {
     <div className="mt-3 bg-black/30 rounded-lg border border-white/5 p-3">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-bold uppercase tracking-wider text-dash-muted">{t('sagas.searchCatalog')}</span>
-        <button onClick={() => { setOpen(false); setQuery(''); setResults([]) }} className="text-dash-muted hover:text-white cursor-pointer"><X size={14} /></button>
+        <button onClick={() => { setOpen(false); setQuery(''); setResults([]); setRawgResults([]); setRawgSearched(false) }} className="text-dash-muted hover:text-white cursor-pointer"><X size={14} /></button>
       </div>
       <input
         type="text"
@@ -206,7 +276,7 @@ function AddGameToSaga({ sagaId, onAdded }) {
         autoFocus
         className={inputCls}
       />
-      {searching && <div className="text-center text-dash-muted text-xs py-3">Buscando...</div>}
+      {searching && <div className="text-center text-dash-muted text-xs py-3">{t('common.searching')}</div>}
       <div className="max-h-[200px] overflow-y-auto mt-2 space-y-1">
         {results.map(g => (
           <button
@@ -228,6 +298,55 @@ function AddGameToSaga({ sagaId, onAdded }) {
           </button>
         ))}
       </div>
+
+      {/* RAWG search button */}
+      {!searching && query.length >= 2 && RAWG_KEY && !rawgSearched && (
+        <button
+          onClick={searchRawg}
+          disabled={rawgLoading}
+          className="mt-2 w-full flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-wider px-3 py-2 rounded-lg border border-accent-purple/30 text-accent-purple hover:bg-accent-purple/10 transition-colors cursor-pointer disabled:opacity-50"
+        >
+          {rawgLoading ? <Loader2 size={14} className="animate-spin" /> : <Globe size={14} strokeWidth={2.5} />}
+          {t('sagas.searchRawg')}
+        </button>
+      )}
+
+      {/* RAWG results */}
+      {rawgSearched && (
+        <div className="mt-2">
+          <div className="text-[0.65em] font-bold uppercase tracking-wider text-accent-purple mb-1 flex items-center gap-1">
+            <Globe size={12} /> RAWG
+            <span className="text-dash-muted font-normal">({rawgResults.length})</span>
+          </div>
+          {rawgLoading ? (
+            <div className="text-center py-3"><Loader2 size={16} className="animate-spin text-accent-purple mx-auto" /></div>
+          ) : rawgResults.length === 0 ? (
+            <div className="text-center text-dash-muted text-xs py-3">{t('sagas.rawgNoResults')}</div>
+          ) : (
+            <div className="max-h-[200px] overflow-y-auto space-y-1">
+              {rawgResults.map(g => (
+                <button
+                  key={g.id}
+                  onClick={() => importAndAddFromRawg(g)}
+                  disabled={adding === g.id}
+                  className="w-full flex items-center gap-2 p-1.5 rounded-lg hover:bg-accent-purple/5 transition-colors text-left cursor-pointer disabled:opacity-50"
+                >
+                  {g.background_image ? (
+                    <img src={g.background_image} alt="" className="w-8 h-11 rounded object-cover shrink-0" />
+                  ) : (
+                    <div className="w-8 h-11 rounded bg-white/5 shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-white text-xs font-bold truncate">{g.name}</div>
+                    <div className="text-dash-muted text-[0.6rem]">{g.released?.substring(0, 4)} • {g.platforms?.map(p => p.platform?.name).slice(0, 2).join(', ')}</div>
+                  </div>
+                  <span className="text-[0.5em] font-black px-1.5 py-0.5 rounded bg-accent-purple/20 text-accent-purple shrink-0">RAWG</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
